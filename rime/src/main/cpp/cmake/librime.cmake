@@ -1,0 +1,15 @@
+set(LIBRIME_SOURCE_DIR ${RIME_JNI_ROOT}/librime)
+set(LIBRIME_INCLUDE_DIR ${LIBRIME_SOURCE_DIR}/include)
+
+if(NOT EXISTS ${LIBRIME_SOURCE_DIR})
+    message(WARNING "librime source directory not found")
+else()
+    # add_subdirectory(${LIBRIME_SOURCE_DIR}) (deprecated)
+    # we should do this instead now
+    include(${CMAKE_MODULE_PATH}/librimeCmlOverride.cmake)
+    if(TARGET rime)
+        add_library(rime::rime ALIAS rime)
+        list(APPEND ALL_LINK_LIBS rime)
+        list(APPEND ALL_INCLUDE_DIRS ${LIBRIME_INCLUDE_DIR})
+    endif()
+endif()

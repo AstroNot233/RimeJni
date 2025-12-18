@@ -1,0 +1,12 @@
+.cxx/
+
+src/androidTest/
+src/test/
+
+src/main/cpp/*
+
+!src/main/cpp/cmake
+!src/main/cpp/cmake/*
+!src/main/cpp/jni
+!src/main/cpp/jni/*
+!src/main/cpp/CMakeLists.txt

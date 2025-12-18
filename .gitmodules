@@ -1,0 +1,6 @@
+[submodule "rime/src/main/cpp/librime"]
+	path = rime/src/main/cpp/librime
+	url = https://github.com/rime/librime.git
+[submodule "rime/src/main/cpp/fbjni"]
+	path = rime/src/main/cpp/fbjni
+	url = https://github.com/facebookincubator/fbjni.git
