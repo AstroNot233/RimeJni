@@ -1,15 +1,12 @@
-set(FBJNI_SOURCE_DIR ${RIME_JNI_ROOT}/fbjni)
-set(FBJNI_INCLUDE_DIR ${FBJNI_SOURCE_DIR}/include)
+set(FBJNI_VERSION "0.7.0")
+set(FBJNI_URL "https://github.com/facebookincubator/fbjni/archive/refs/tags/${FBJNI_VERSION}.tar.gz")
 
-if(NOT EXISTS ${FBJNI_SOURCE_DIR}/CMakeLists.txt)
-    message(WARNING "fbjni source directory not found or missing CMakeLists.txt")
-else()
-    add_subdirectory(${FBJNI_SOURCE_DIR})
+download_and_extract(
+    "fbjni"
+    ${FBJNI_VERSION}
+    ".tar.gz"
+    ${FBJNI_URL}
+    "9e356cc4db48634cc2b3199305c9f1bad396f5844847ff61ba3b3f8080577059"
+)
 
-    if(TARGET fbjni)
-        add_library(fbjni::fbjni ALIAS fbjni)
-    endif()
-
-    list(APPEND ALL_INCLUDE_DIRS ${FBJNI_INCLUDE_DIR})
-    list(APPEND ALL_LINK_LIBS fbjni)
-endif()
+add_subdirectory(${FBJNI_SOURCE_DIR})

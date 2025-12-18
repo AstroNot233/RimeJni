@@ -10,5 +10,3 @@ download_and_extract(
 )
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build opencc as shared library")
-
-# add_subdirectory(${OPENCC_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/opencc_build EXCLUDE_FROM_ALL)

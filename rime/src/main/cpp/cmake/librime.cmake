@@ -1,17 +1,14 @@
-set(LIBRIME_SOURCE_DIR ${RIME_JNI_ROOT}/librime)
-set(LIBRIME_INCLUDE_DIR ${LIBRIME_SOURCE_DIR}/include)
+set(LIBRIME_VERSION "1.15.0")
+set(LIBRIME_URL "https://github.com/rime/librime/archive/refs/tags/${LIBRIME_VERSION}.tar.gz")
 
-if(NOT EXISTS ${LIBRIME_SOURCE_DIR})
-    message(WARNING "librime source directory not found")
-else()
-    # Bypass add_subdirectory(${LIBRIME_SOURCE_DIR}),
-    # because its find_package() could not find external libraries.
-    include(${CMAKE_MODULE_PATH}/librime_CML_Override.cmake)
-    if(TARGET rime-static)
-        add_library(rime::rime ALIAS rime-static)
-        list(APPEND ALL_LINK_LIBS rime-static)
-        list(APPEND ALL_INCLUDE_DIRS ${LIBRIME_INCLUDE_DIR})
-        list(APPEND ALL_LINK_LIBS rime-static)
-        list(APPEND ALL_INCLUDE_DIRS ${LIBRIME_INCLUDE_DIR})
-    endif()
-endif()
+download_and_extract(
+    "librime"
+    ${LIBRIME_VERSION}
+    ".tar.gz"
+    ${LIBRIME_URL}
+    "a6283cb6a9fa9445dbd7fac58f614884edd662486fa79809ca63686c8f59c6da"
+)
+
+# Avoid add_subdirectory(${LIBRIME_SOURCE_DIR}),
+# because its find_package() could not find external libraries.
+include(${CMAKE_MODULE_PATH}/librime_CML_Override.cmake)

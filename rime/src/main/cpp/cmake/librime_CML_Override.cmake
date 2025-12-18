@@ -29,6 +29,11 @@ add_library(rime-static STATIC
     ${RIME_PLUGINS_SOURCES}
 )
 
+target_include_directories(rime-static PUBLIC
+    ${RIME_SOURCE_DIR}/include
+    ${RIME_SOURCE_DIR}/src
+)
+
 target_include_directories(rime-static PRIVATE
     ${RIME_SOURCE_DIR}/include
     ${RIME_SOURCE_DIR}/src
