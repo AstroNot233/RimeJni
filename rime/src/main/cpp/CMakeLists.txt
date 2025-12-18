@@ -9,11 +9,14 @@ set(CMAKE_MODULE_PATH ${RIME_JNI_ROOT}/cmake)
 
 include(${CMAKE_MODULE_PATH}/downloader.cmake)
 
-include(${CMAKE_MODULE_PATH}/fbjni.cmake)
-include(${CMAKE_MODULE_PATH}/yaml-cpp.cmake)
-include(${CMAKE_MODULE_PATH}/OpenCC.cmake)
-include(${CMAKE_MODULE_PATH}/LevelDB.cmake)
-# include(${CMAKE_MODULE_PATH}/marisa-trie.cmake)
 include(${CMAKE_MODULE_PATH}/Boost.cmake)
+include(${CMAKE_MODULE_PATH}/yaml-cpp.cmake)
+include(${CMAKE_MODULE_PATH}/marisa-trie.cmake)
+include(${CMAKE_MODULE_PATH}/LevelDB.cmake)
+include(${CMAKE_MODULE_PATH}/OpenCC.cmake)
 include(${CMAKE_MODULE_PATH}/librime.cmake)
-# include(${CMAKE_MODULE_PATH}/jni.cmake)
+
+include(${CMAKE_MODULE_PATH}/fbjni.cmake)
+include(${CMAKE_MODULE_PATH}/jni.cmake)
+
+# message(FATAL_ERROR "To be implemented")

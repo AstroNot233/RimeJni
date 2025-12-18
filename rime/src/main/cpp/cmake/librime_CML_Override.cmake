@@ -7,10 +7,6 @@ add_definitions(-DRIME_VERSION="${rime_version}")
 add_definitions(-DBOOST_DLL_USE_STD_FS)
 add_definitions(-DYAML_CPP_STATIC_DEFINE)
 add_definitions(-DOpencc_BUILT_AS_STATIC)
-option(ENABLE_THREADING "Enable threading for deployer" ON)
-if(NOT ENABLE_THREADING)
-  add_definitions(-DRIME_NO_THREADING)
-endif()
 
 file(GLOB_RECURSE RIME_CORE_SOURCES
     ${RIME_SOURCE_DIR}/src/*.cc
@@ -37,6 +33,7 @@ target_include_directories(rime-static PRIVATE
     ${RIME_SOURCE_DIR}/include
     ${RIME_SOURCE_DIR}/src
     ${CMAKE_CURRENT_BINARY_DIR}/librime_build/src
+    ${OPENCC_ROOT}/src
 )
 
 set_target_properties(rime-static PROPERTIES
@@ -45,18 +42,33 @@ set_target_properties(rime-static PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
-set(BOOST_LINK_LIBRARIES "")
-foreach(lib ${BOOST_LIBS})
-    list(APPEND BOOST_LINK_LIBRARIES "Boost::${lib}")
+find_package(Threads REQUIRED)
+
+set(
+    REQUIRED_TARGETS
+    "Threads::Threads"
+    "Boost::crc"
+    "Boost::filesystem"
+    "Boost::headers"
+    "Boost::interprocess"
+    "Boost::regex" 
+    "Boost::signals2"
+    "Boost::system"
+    "Boost::uuid"
+    "yaml-cpp"
+    "marisa"
+    "leveldb"
+)
+
+foreach(dep_target ${REQUIRED_TARGETS})
+    if(TARGET ${dep_target})
+        get_target_property(target_type ${dep_target} TYPE)
+        message(STATUS "Target ${dep_target} exists (type: ${dep_target})")
+    else()
+        message(FATAL_ERROR "Target '${dep_target}' does not exist!")
+    endif()
 endforeach()
 
-target_link_libraries(rime-static PRIVATE
-    ${BOOST_LINK_LIBRARIES}
-    # opencc::opencc
-    # yaml-cpp
-    # leveldb::leveldb
-    # marisa::marisa
-    # Threads::Threads
-)
+target_link_libraries(rime-static PRIVATE ${REQUIRED_TARGETS})
 
 add_library(rime ALIAS rime-static)
