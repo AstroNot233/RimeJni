@@ -1,3 +1,4 @@
+set(LIBRIME_CMAKE_DIR ${CMAKE_MODULE_PATH}/librime_cmakelists_override)
 set(RIME_SOURCE_DIR ${LIBRIME_SOURCE_DIR})
 set(RIME_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/librime_build)
 configure_file(
@@ -51,6 +52,23 @@ set_target_properties(rime-static PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
 )
+
+if(ENABLE_PLUGINS)
+    add_subdirectory(${RIME_SOURCE_DIR}/plugins)
+    set(list "")
+    foreach(mod ${rime_plugins_modules})
+        set(list "${list},Q(${mod})")
+    endforeach()
+    set(RIME_SETUP_EXTRA_MODULES "${list}")
+    if(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS AND rime_plugins_objs)
+        set(rime_plugins_library rime-plugins)
+    endif()
+else()
+    target_compile_definitions(rime-static PRIVATE
+        -DENABLE_EXTERNAL_PLUGINS=0
+        -DRIME_EXTRA_MODULES=""
+    )
+endif(ENABLE_PLUGINS)
 
 find_package(Threads REQUIRED)
 set(BOOST_DEPS "")
