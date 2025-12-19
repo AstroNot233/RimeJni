@@ -10,3 +10,5 @@ download_and_extract(
 )
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build opencc as shared library")
+
+add_to_include(OpenCC "${OPENCC_SOURCE_DIR}/src")
