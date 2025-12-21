@@ -1,6 +1,10 @@
+#ifndef FBJNI_ALIAS_HPP
+#define FBJNI_ALIAS_HPP
+
 #include <fbjni/fbjni.h>
 
 namespace rime {
+
     namespace fbjni = facebook::jni;
 
     using fbjni::alias_ref;
@@ -37,4 +41,7 @@ namespace rime {
 
     template <typename type>
     using jarray = fbjni::JArrayClass<type>;
+
 }
+
+#endif //FBJNI_ALIAS_HPP

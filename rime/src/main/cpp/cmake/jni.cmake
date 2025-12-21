@@ -3,6 +3,7 @@ set(JNI_SOURCE_DIR ${RIME_JNI_ROOT}/jni)
 set(JNI_LIB_NAME "rime-jni")
 
 file(GLOB_RECURSE JNI_SOURCES
+    ${JNI_SOURCE_DIR}/*.cc
     ${JNI_SOURCE_DIR}/*.cpp
     ${JNI_SOURCE_DIR}/*.hpp
     ${JNI_SOURCE_DIR}/*.c
