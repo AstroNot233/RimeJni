@@ -9,6 +9,9 @@ download_and_extract(
     "ad4bcd8d87219a240a236d4a55c9decd2132a9436697d2882ead85c8939b0a99"
 )
 
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build opencc as shared library")
+set(USE_SYSTEM_MARISA ON CACHE BOOL "" FORCE)
+set(LIBMARISA marisa)
+
+add_subdirectory(${OPENCC_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/opencc_build EXCLUDE_FROM_ALL)
 
 add_to_include(OpenCC "${OPENCC_SOURCE_DIR}/src")

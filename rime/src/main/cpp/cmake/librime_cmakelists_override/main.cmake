@@ -82,6 +82,7 @@ set(REQUIRED_TARGETS
     "yaml-cpp"
     "marisa"
     "leveldb"
+    "libopencc"
 )
 
 foreach(dep_target ${REQUIRED_TARGETS})

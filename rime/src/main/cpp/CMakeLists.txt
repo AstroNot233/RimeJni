@@ -23,6 +23,8 @@ if(NOT EXISTS ${JNI_INCLUDE_DIR})
     file(MAKE_DIRECTORY ${JNI_INCLUDE_DIR})
 endif()
 
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
 include(${CMAKE_MODULE_PATH}/Helper.cmake)
 
 include(${CMAKE_MODULE_PATH}/Boost.cmake)
