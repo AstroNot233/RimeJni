@@ -20,7 +20,7 @@ namespace rime {
     private:
         friend HybridBase;
         std::unique_ptr<RimeApi> const rime { rime_get_api() };
-        facebook::jni::global_ref<facebook::jni::JObject> const callback;
+        facebook::jni::global_ref<facebook::jni::JObject> const notification;
         std::shared_ptr<RimeTraitsAndroid> const traits;
         RimeSessionId session {};
 

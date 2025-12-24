@@ -6,8 +6,8 @@ namespace rime {
 // class JRimeCore : public facebook::jni::HybridClass<JRimeCore>
 
 // Factory method
-    local_ref<JRimeCore::javaobject> JRimeCore::create(alias_ref<JClass> /*self*/, jstring sharedDataDir, jstring userDataDir, jstring appName, jobject callback) {
-        return newObjectCxxArgs(sharedDataDir, userDataDir, appName, callback);
+    local_ref<JRimeCore::javaobject> JRimeCore::create(alias_ref<JClass> /*self*/, jstring sharedDataDir, jstring userDataDir, jstring appName, jobject notification) {
+        return newObjectCxxArgs(sharedDataDir, userDataDir, appName, notification);
     }
 
 // Lifecycle
@@ -159,8 +159,8 @@ namespace rime {
 
 // private:
 
-    JRimeCore::JRimeCore(jstring sharedDataDir, jstring userDataDir, jstring appName, jobject callback) :
-    callback { make_global(callback) },
+    JRimeCore::JRimeCore(jstring sharedDataDir, jstring userDataDir, jstring appName, jobject notification) :
+    notification { make_global(notification) },
     traits {
         std::make_shared<RimeTraitsAndroid> (
             cstr_from_jstring(sharedDataDir).copy(),
@@ -179,10 +179,10 @@ namespace rime {
     }
 
     void JRimeCore::notificationHandler(void * context_object, RimeSessionId session_id, char const * message_type, char const * message_value) {
-        auto const callback = static_cast<JRimeCore *>(context_object)->callback;
-        return // return callback.handleMessage(message_type, message_value);
-            (callback->getClass()->getMethod<void(jstring, jstring)>("handleMessage"))(
-                    callback.get(),
+        auto const notification = static_cast<JRimeCore *>(context_object)->notification;
+        return // return notification.handle(message_type, message_value);
+            (notification->getClass()->getMethod<void(jstring, jstring)>("create"))(
+                    notification.get(),
                     jstring_from_cstr(message_type),
                     jstring_from_cstr(message_value)
             );
