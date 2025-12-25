@@ -1,99 +1,67 @@
 set(LIBRIME_CMAKE_DIR ${CMAKE_MODULE_PATH}/librime_cmakelists_override)
 set(RIME_SOURCE_DIR ${LIBRIME_SOURCE_DIR})
 set(RIME_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/librime_build)
-configure_file(
-    "${LIBRIME_SOURCE_DIR}/src/rime/build_config.h.in"
-    "${RIME_BUILD_DIR}/src/rime/build_config.h"
-)
 
 set(CMAKE_CXX_STANDARD 17)
 set(rime_version 1.15.0)
+set(rime_soversion 1)
+
+option(BUILD_SHARED_LIBS "Build Rime as shared library" OFF)
+option(BUILD_MERGED_PLUGINS "Merge plugins into one Rime library" ON)
+option(BUILD_STATIC "Build with dependencies as static libraries" ON)
+
 add_definitions(-DRIME_VERSION="${rime_version}")
 add_definitions(-DBOOST_DLL_USE_STD_FS)
 add_definitions(-DYAML_CPP_STATIC_DEFINE)
 add_definitions(-DOpencc_BUILT_AS_STATIC)
 
-file(GLOB_RECURSE RIME_CORE_SOURCES
-    ${RIME_SOURCE_DIR}/src/*.cc
-    ${RIME_SOURCE_DIR}/src/*.cpp
-    ${RIME_SOURCE_DIR}/src/*.c
+configure_file(
+    "${RIME_SOURCE_DIR}/src/rime/build_config.h.in"
+    "${RIME_BUILD_DIR}/src/rime/build_config.h"
 )
 
-list(FILTER RIME_CORE_SOURCES EXCLUDE REGEX ".*_test\\.(cc|cpp|c)$")
+include_directories(${RIME_BUILD_DIR}/src)
+include_directories(${RIME_SOURCE_DIR}/src)
+include_directories(${RIME_SOURCE_DIR}/include)
+link_directories(${RIME_SOURCE_DIR}/lib)
 
-set(RIME_PLUGINS_SOURCES "")
-file(GLOB_RECURSE PLUGIN_SOURCES
-    ${RIME_SOURCE_DIR}/plugins/*/*.cc
-    ${RIME_SOURCE_DIR}/plugins/*/*.cpp
-    ${RIME_SOURCE_DIR}/plugins/*/*.c
-)
-list(FILTER PLUGIN_SOURCES EXCLUDE REGEX ".*_test\\.(cc|cpp|c)$")
-list(APPEND RIME_PLUGINS_SOURCES ${PLUGIN_SOURCES})
+# keep these variables lest some Rime plugin's cmake file is still using them {
+if(NOT DEFINED LIB_INSTALL_DIR)
+    set(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR})
+endif()
 
-add_library(rime-static STATIC
-    ${RIME_CORE_SOURCES}
-    ${RIME_PLUGINS_SOURCES}
-)
+if(NOT DEFINED BIN_INSTALL_DIR)
+    set(BIN_INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
+endif()
+# }
 
-target_include_directories(rime-static PUBLIC
-    ${RIME_SOURCE_DIR}/include
-    ${RIME_SOURCE_DIR}/src
-)
-
-target_include_directories(rime-static SYSTEM PRIVATE
-    ${RIME_SOURCE_DIR}/include
-    ${RIME_SOURCE_DIR}/src
-    ${RIME_BUILD_DIR}/src
-    ${JNI_INCLUDE_DIR}
+install(
+    FILES cmake/RimeConfig.cmake
+    DESTINATION ${CMAKE_INSTALL_FULL_DATADIR}/cmake/rime
 )
 
-set_target_properties(rime-static PROPERTIES
-    POSITION_INDEPENDENT_CODE ON
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED ON
-)
+file(GLOB rime_public_header_files ${RIME_SOURCE_DIR}/src/*.h)
+list(FILTER rime_public_header_files EXCLUDE REGEX .*_impl\.h$)
+# install(
+#     FILES ${rime_public_header_files}
+#     DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}
+# )
 
-if(ENABLE_PLUGINS)
-    add_subdirectory(${RIME_SOURCE_DIR}/plugins)
-    set(list "")
-    foreach(mod ${rime_plugins_modules})
-        set(list "${list},Q(${mod})")
-    endforeach()
-    set(RIME_SETUP_EXTRA_MODULES "${list}")
-    if(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS AND rime_plugins_objs)
-        set(rime_plugins_library rime-plugins)
-    endif()
-else()
-    target_compile_definitions(rime-static PRIVATE
-        -DENABLE_EXTERNAL_PLUGINS=0
-        -DRIME_EXTRA_MODULES=""
-    )
-endif(ENABLE_PLUGINS)
+if(ENABLE_EXTERNAL_PLUGINS)
+    list(APPEND $(REQUIRED_TARGETS) dl)
+endif()
 
-find_package(Threads REQUIRED)
-set(BOOST_DEPS "")
-foreach(module ${BOOST_MODULES})
-    list(APPEND BOOST_DEPS "Boost::${module}")
+set(rime_library rime-static)
+
+include(${CMAKE_MODULE_PATH}/librime_cmakelists_override/plugins.cmake)
+add_subdirectory(${RIME_SOURCE_DIR}/plugins)
+
+message(STATUS "rime_plugins_libs: ${rime_plugins_deps}")
+message(STATUS "rime_plugins_modules: ${rime_plugins_modules}")
+set(list "")
+foreach(mod ${rime_plugins_modules})
+  set(list "${list},Q(${mod})")
 endforeach()
+set(RIME_SETUP_EXTRA_MODULES "${list}")
 
-set(REQUIRED_TARGETS
-    "Threads::Threads"
-    ${BOOST_DEPS}
-    "yaml-cpp"
-    "marisa"
-    "leveldb"
-    "libopencc"
-)
-
-foreach(dep_target ${REQUIRED_TARGETS})
-    if(TARGET ${dep_target})
-        get_target_property(target_type ${dep_target} TYPE)
-        message(STATUS "Target ${dep_target} exists (type: ${dep_target})")
-    else()
-        message(FATAL_ERROR "Target `${dep_target}` does not exist!")
-    endif()
-endforeach()
-
-target_link_libraries(rime-static PRIVATE ${REQUIRED_TARGETS})
-
-add_library(rime ALIAS rime-static)
+include(${CMAKE_MODULE_PATH}/librime_cmakelists_override/src.cmake)

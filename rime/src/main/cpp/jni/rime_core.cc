@@ -179,13 +179,18 @@ namespace rime {
     }
 
     void JRimeCore::notificationHandler(void * context_object, RimeSessionId session_id, char const * message_type, char const * message_value) {
-        auto const notification = static_cast<JRimeCore *>(context_object)->notification;
-        return // return notification.handle(message_type, message_value);
-            (notification->getClass()->getMethod<void(jstring, jstring)>("create"))(
-                    notification.get(),
-                    jstring_from_cstr(message_type),
-                    jstring_from_cstr(message_value)
-            );
+    auto const notification = static_cast<JRimeCore *>(context_object)->notification;
+    // notification.handleRimeNotification(message_type, message_value)
+        if (
+            !(notification->getClass()->
+            getMethod<jboolean(jstring, jstring)>("handleRimeNotification"))(
+                notification.get(),
+                jstring_from_cstr(message_type),
+                jstring_from_cstr(message_value)
+            )
+        ) {
+            // TODO: log
+        }
     }
 
 }

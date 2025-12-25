@@ -4,15 +4,16 @@ class RimeCore {
     
     companion object {
         @JvmStatic  // Factory method
-        external fun create(sharedDataDir: String, userDataDir: String, appName: String, callback: NotificationHandler ): RimeCore
+        external fun create(sharedDataDir: String, userDataDir: String,
+                            appName: String, notification: RimeNotificationHandler): RimeCore
         init { System.loadLibrary("rime-jni") }
     }
     // Lifecycle
-    external fun startup(fullCheck: Boolean): Boolean
+    external fun startup(fullCheck: Boolean = false): Boolean
     external fun shutdown()
     external fun syncUserData(): Boolean
     // IO behavior
-    external fun processKey(keyCode: Int, mask: Int): Boolean
+    external fun processKey(keyCode: Int, mask: Int = 0): Boolean
     external fun simulateKeySequence(sequence: String): Boolean
     external fun commitComposition(): Boolean
     external fun clearComposition(): Boolean
@@ -23,7 +24,7 @@ class RimeCore {
     external fun getProperty(property: String): String
     // Schema
     external fun deploySchema(schemaFile: String): Boolean
-    external fun getSchemaList()
+    external fun getSchemaList(): Array<RimeSchemaInfo>
     external fun getCurrentSchemaId(): String
     external fun selectSchema(schemaId: String): Boolean
     // Candidate and page

@@ -4,7 +4,7 @@ class RimeSchemaInfo private constructor(val schemaId: String, val schemaName: S
 
     companion object {
         @JvmStatic  // Factory method
-        fun create(schemaId: String, schemaName: String): RimeSchemaInfo = RimeSchemaInfo(schemaId, schemaName)
+        fun create(schemaId: String = "", schemaName: String = ""): RimeSchemaInfo = RimeSchemaInfo(schemaId, schemaName)
     }
 
 }
