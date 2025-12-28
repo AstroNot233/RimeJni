@@ -23,6 +23,7 @@ set(rime_dict_module_src
 )
 
 set(rime_src
+    ${api_src}
     ${rime_core_module_src}
     ${rime_dict_module_src}
     ${rime_gears_src}
@@ -32,10 +33,6 @@ set(rime_src
 )
 
 find_package(Threads REQUIRED)
-set(BOOST_DEPS "")
-foreach(module ${BOOST_MODULES})
-    list(APPEND BOOST_DEPS "Boost::${module}")
-endforeach()
 
 set(REQUIRED_TARGETS
     "Threads::Threads"
@@ -45,6 +42,8 @@ set(REQUIRED_TARGETS
     "leveldb"
     "libopencc"
 )
+
+list(APPEND $(REQUIRED_TARGETS) dl)
 
 foreach(dep_target ${REQUIRED_TARGETS})
     if(TARGET ${dep_target})
@@ -67,6 +66,10 @@ target_include_directories(rime-static SYSTEM PRIVATE
     ${RIME_BUILD_DIR}/src
     ${JNI_INCLUDE_DIR}
 )
+
+get_target_property(rime_includes rime-static INCLUDE_DIRECTORIES)
+message(STATUS "rime-static includes: ${rime_includes}")
+
 target_link_libraries(rime-static ${REQUIRED_TARGETS})
 
 set_target_properties(rime-static PROPERTIES
@@ -78,8 +81,7 @@ set_target_properties(rime-static PROPERTIES
 )
 install(TARGETS rime-static DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
 
-if(DEFINED RIME_SETUP_EXTRA_MODULES)
-    set_property(SOURCE rime/setup.cc
-        PROPERTY COMPILE_DEFINITIONS
-        "RIME_EXTRA_MODULES=${RIME_SETUP_EXTRA_MODULES}")
-endif()
+set_property(SOURCE ${RIME_SRC_DIR}/rime/setup.cc
+    PROPERTY COMPILE_DEFINITIONS
+    "RIME_EXTRA_MODULES=${RIME_SETUP_EXTRA_MODULES}"
+)

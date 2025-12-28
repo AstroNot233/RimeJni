@@ -4,6 +4,8 @@ plugins {
 }
 
 android {
+    android.ndkVersion = "25.2.9519653"
+
     namespace = "icu.astronot233.rime"
     compileSdk {
         version = release(36)
@@ -17,6 +19,21 @@ android {
 
         ndk {
             abiFilters.add("arm64-v8a")
+        }
+
+        externalNativeBuild {
+            cmake {
+                arguments += listOf(
+                    "-DCMAKE_CXX_STANDARD=17",
+                    "-DCMAKE_CXX_STANDARD_REQUIRED=ON",
+                    "-DCMAKE_CXX_EXTENSIONS=OFF",
+                )
+                cppFlags += listOf(
+                    "-Wno-deprecated",
+                    "-fpermissive",
+                    "-fno-char8_t",
+                )
+            }
         }
     }
 

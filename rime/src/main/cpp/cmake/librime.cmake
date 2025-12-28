@@ -9,8 +9,10 @@ download_and_extract(
     "a6283cb6a9fa9445dbd7fac58f614884edd662486fa79809ca63686c8f59c6da"
 )
 
+include(librime-plugins)
+
 # Do not use add_subdirectory(${LIBRIME_SOURCE_DIR}),
 # because its find_package() could not find external libraries.
-include(${CMAKE_MODULE_PATH}/librime_cmakelists_override/main.cmake)
+include(librime_cmakelists_override/main)
 
 add_to_include(librime "${LIBRIME_SOURCE_DIR}/src")

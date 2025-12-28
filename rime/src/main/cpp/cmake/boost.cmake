@@ -13,27 +13,31 @@ set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
 
 add_subdirectory(${BOOST_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/boost_cmake_build EXCLUDE_FROM_ALL)
 
-set(BOOST_MODULES
-    "algorithm"
-    "filesystem"
-    "system"
-    "regex"
-    "interprocess"
-    "signals2"
-    "uuid"
-    "crc"
-    "range"
-    "scope_exit"
+file(GLOB BOOST_INCLUDE_DIRS ${BOOST_ROOT}/libs/*/include)
+set(EXCLUDED
+    "graph_parallel"
+    "parameter_python"
+    "property_map_parallel"
+    "test"
+    "mpi"
+    "python"
+    "cobalt"
 )
-set(BOOST_INCLUDE_DIRS "")
+foreach(module ${EXCLUDED})
+    list(REMOVE_ITEM BOOST_INCLUDE_DIRS "${BOOST_ROOT}/libs/${module}/include")
+endforeach()
 
-foreach(module ${BOOST_MODULES})
-    set(module_path "${BOOST_ROOT}/libs/${module}/include")
-    if(EXISTS "${module_path}")
-        list(APPEND BOOST_INCLUDE_DIRS "${module_path}")
-    else()
-        message(WARNING "Boost module ${module} not found at ${module_path}")
+set(BOOST_MODULES "")
+set(BOOST_DEPS "")
+foreach(module ${BOOST_INCLUDE_DIRS})
+    string(REGEX MATCH "${BOOST_ROOT}/libs/([^/]+)/include" matched ${module})
+    if(matched AND CMAKE_MATCH_1)
+        list(APPEND BOOST_MODULES ${CMAKE_MATCH_1})
+        list(APPEND BOOST_DEPS "Boost::${CMAKE_MATCH_1}")
     endif()
 endforeach()
 
-target_include_directories(boost_headers SYSTEM INTERFACE ${BOOST_INCLUDE_DIRS})
+target_include_directories(boost_headers SYSTEM INTERFACE
+    ${BOOST_ROOT}
+    ${BOOST_INCLUDE_DIRS}
+)

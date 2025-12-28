@@ -15,3 +15,14 @@ set(LIBMARISA marisa)
 add_subdirectory(${OPENCC_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/opencc_build EXCLUDE_FROM_ALL)
 
 add_to_include(OpenCC "${OPENCC_SOURCE_DIR}/src")
+
+file(WRITE ${FIND_PACKAGE_DIR}/FindOpencc.cmake
+    "set(Opencc_FOUND TRUE)\n"
+    "set(Opencc_INCLUDE_DIRS \"${OPENCC_ROOT}/src\")\n"
+    "set(Opencc_LIBRARIES \"\")\n"
+    "set(Opencc_VERSION ${OPENCC_VERSION})\n"
+    "foreach(comp IN ITEMS system filesystem)\n"
+    "   set(Opencc_\${comp}_FOUND TRUE)\n"
+    "   set(Opencc_\${comp}_LIBRARY \"\")\n"
+    "endforeach()\n"
+)
