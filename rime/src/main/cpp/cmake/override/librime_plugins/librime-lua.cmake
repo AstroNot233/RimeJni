@@ -1,5 +1,3 @@
-set(plugin_modules "lua")
-set(plugin_objs $<TARGET_OBJECTS:rime-lua-objs>)
 set(LUA_SRC_DIR ${LIBRIME_LUA_SOURCE_DIR}/thirdparty/lua5.4)
 set(PLUGIN_SRC_DIR ${LIBRIME_LUA_SOURCE_DIR}/src)
 
@@ -24,3 +22,6 @@ target_compile_definitions(rime-lua-objs PRIVATE
 )
 
 target_link_libraries(rime-lua-objs PRIVATE ${BOOST_DEPS})
+
+set(plugin_modules "lua")
+set(plugin_objs $<TARGET_OBJECTS:rime-lua-objs>)

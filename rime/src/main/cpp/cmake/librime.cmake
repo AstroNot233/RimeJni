@@ -13,6 +13,6 @@ include(librime-plugins)
 
 # Do not use add_subdirectory(${LIBRIME_SOURCE_DIR}),
 # because its find_package() could not find external libraries.
-include(librime_cmakelists_override/main)
+include(override/librime/main)
 
 add_to_include(librime "${LIBRIME_SOURCE_DIR}/src")

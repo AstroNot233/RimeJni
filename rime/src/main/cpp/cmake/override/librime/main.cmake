@@ -52,7 +52,7 @@ list(FILTER rime_public_header_files EXCLUDE REGEX .*_impl\.h$)
 
 set(rime_library rime-static)
 
-include(librime_cmakelists_override/plugins)
+include(override/librime/plugins)
 
 message(STATUS "rime_plugins_modules: ${rime_plugins_modules}")
 set(list "")
@@ -61,4 +61,4 @@ foreach(mod ${rime_plugins_modules})
 endforeach()
 set(RIME_SETUP_EXTRA_MODULES "${list}")
 
-include(librime_cmakelists_override/src)
+include(override/librime/src)

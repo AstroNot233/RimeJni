@@ -29,11 +29,11 @@ download_and_extract(
 )
 add_to_plugins("librime-predict" ${LIBRIME_PREDICT_SOURCE_DIR})
 
-# download_and_extract(
-#     "librime-proto"
-#     "master"
-#     ".zip"
-#     "https://github.com/lotem/librime-proto/archive/refs/heads/master.zip"
-#     "bypass"
-# )
-# add_to_plugins("librime-proto" ${LIBRIME_PROTO_SOURCE_DIR})
+download_and_extract(
+    "librime-proto"
+    "master"
+    ".zip"
+    "https://github.com/lotem/librime-proto/archive/refs/heads/master.zip"
+    "bypass"
+)
+add_to_plugins("librime-proto" ${LIBRIME_PROTO_SOURCE_DIR})

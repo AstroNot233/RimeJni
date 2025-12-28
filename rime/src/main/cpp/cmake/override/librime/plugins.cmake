@@ -18,13 +18,13 @@ target_include_directories(rime-plugins-objs SYSTEM PRIVATE
 )
 target_link_libraries(rime-plugins-objs ${BOOST_DEPS})
 
-file(GLOB plugin_cmakes "${RIME_JNI_ROOT}/cmake/librime_cmakelists_override/plugins/*.cmake")
+file(GLOB plugin_cmakes "${RIME_JNI_ROOT}/cmake/override/librime_plugins/*.cmake")
 foreach(plugin ${plugin_cmakes})
     unset(plugin_objs)
     unset(plugin_modules)
     include(${plugin})
-    set(plugins_objs ${plugins_objs} ${plugin_objs})
-    set(plugins_modules ${plugins_modules} ${plugin_modules})
+    list(APPEND plugins_objs ${plugin_objs})
+    list(APPEND plugins_modules ${plugin_modules})
 endforeach(plugin)
 
 set(rime_plugins_objs ${plugins_objs})
