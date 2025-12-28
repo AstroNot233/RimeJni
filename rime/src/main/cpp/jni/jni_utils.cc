@@ -2,7 +2,7 @@
 #include "fbjni_alias.hpp"
 #include <cstring>
 
-namespace rime {
+namespace rime::jni {
 
     cstr_from_jstring::cstr_from_jstring(jstring const & jstr) : jstr { jstr },
         cstr { fbjni::Environment::current()->GetStringUTFChars(jstr, nullptr) } {}

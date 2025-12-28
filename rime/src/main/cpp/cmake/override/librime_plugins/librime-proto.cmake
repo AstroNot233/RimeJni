@@ -13,6 +13,9 @@ if(NOT (EXISTS ${HOST_CAPNP} AND EXISTS ${HOST_CAPNPC_CXX}))
         "Required files: capnp, capnpc-c++")
 endif()
 set(CAPNPC_OUTPUT_DIR ${LIBRIME_PROTO_SOURCE_DIR}/deps/gen)
+if(NOT EXISTS ${CAPNPC_OUTPUT_DIR})
+    file(MAKE_DIRECTORY ${CAPNPC_OUTPUT_DIR})
+endif()
 set(capnp_gen_srcs
     ${CAPNPC_OUTPUT_DIR}/rime_proto.capnp.c++
     ${CAPNPC_OUTPUT_DIR}/rime_ipc.capnp.c++
@@ -24,7 +27,7 @@ set(capnp_gen_hdrs
 add_custom_command(
     OUTPUT ${capnp_gen_srcs} ${capnp_gen_hdrs}
     COMMAND "${HOST_CAPNP}" compile
-        -o "${HOST_CAPNPC_CXX}:${CMAKE_CURRENT_BINARY_DIR}"
+        -o "${HOST_CAPNPC_CXX}:${CAPNPC_OUTPUT_DIR}"
         --src-prefix "${LIBRIME_PROTO_SOURCE_DIR}"
         -I "${LIBRIME_PROTO_SOURCE_DIR}"
         -I "${CAPNPROTO_ROOT}/c++/src"
@@ -53,3 +56,4 @@ target_link_libraries(rime-proto-deps INTERFACE capnp capnp-rpc kj)
 
 set(plugin_modules "proto")
 set(plugin_objs $<TARGET_OBJECTS:rime-proto-objs>)
+set(plugin_includes ${})

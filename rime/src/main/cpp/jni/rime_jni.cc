@@ -3,7 +3,7 @@
 extern "C" {
 
     void registerAllNatives() {
-        rime::JRimeCore::RegisterNatives();
+        rime::jni::JRimeCore::RegisterNatives();
     }
 
     JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {

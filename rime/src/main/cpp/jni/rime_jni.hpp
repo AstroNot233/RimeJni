@@ -7,7 +7,7 @@
 #include <librime/rime_api.h>
 #include <librime/rime/key_table.h>
 
-namespace rime {
+namespace rime::jni {
 
     constexpr auto MAX_BUFFER_LENGTH { 1ULL << 10 };
 
@@ -69,6 +69,12 @@ namespace rime {
         JRimeCore(jstring sharedDataDir, jstring userDataDir, jstring appName, jobject callback);
         RimeSessionId getSession(bool newSession = false);
         static void notificationHandler(void * context_object, RimeSessionId session_id, char const * message_type, char const * message_value);
+    };
+
+    class JRimeProto : public facebook::jni::HybridClass<JRimeProto> {
+
+    public:
+        static constexpr auto kJavaDescriptor { "Licu/astronot233/rime/RimeProto;" };
     };
 
     struct JRimeSchemaInfo : public facebook::jni::JavaClass<JRimeSchemaInfo> {

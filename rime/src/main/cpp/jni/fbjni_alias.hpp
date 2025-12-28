@@ -3,7 +3,7 @@
 
 #include <fbjni/fbjni.h>
 
-namespace rime {
+namespace rime::jni {
 
     namespace fbjni = facebook::jni;
 

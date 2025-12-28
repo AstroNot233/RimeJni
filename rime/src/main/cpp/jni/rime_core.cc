@@ -1,7 +1,7 @@
 #include "rime_jni.hpp"
 #include "fbjni_alias.hpp"
 
-namespace rime {
+namespace rime::jni {
 
 // class JRimeCore : public facebook::jni::HybridClass<JRimeCore>
 
