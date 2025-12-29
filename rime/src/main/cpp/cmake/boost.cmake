@@ -11,9 +11,9 @@ download_and_extract(
 
 set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
 
-add_subdirectory(${BOOST_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/boost_cmake_build EXCLUDE_FROM_ALL)
+add_subdirectory(${BOOST_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/boost_cmake_build EXCLUDE_FROM_ALL)
 
-file(GLOB BOOST_INCLUDE_DIRS ${BOOST_ROOT}/libs/*/include)
+file(GLOB BOOST_INCLUDE_DIRS ${BOOST_SOURCE_DIR}/libs/*/include)
 set(EXCLUDED
     "graph_parallel"
     "parameter_python"
@@ -24,13 +24,13 @@ set(EXCLUDED
     "cobalt"
 )
 foreach(module ${EXCLUDED})
-    list(REMOVE_ITEM BOOST_INCLUDE_DIRS "${BOOST_ROOT}/libs/${module}/include")
+    list(REMOVE_ITEM BOOST_INCLUDE_DIRS "${BOOST_SOURCE_DIR}/libs/${module}/include")
 endforeach()
 
 set(BOOST_MODULES "")
 set(BOOST_DEPS "")
 foreach(module ${BOOST_INCLUDE_DIRS})
-    string(REGEX MATCH "${BOOST_ROOT}/libs/([^/]+)/include" matched ${module})
+    string(REGEX MATCH "${BOOST_SOURCE_DIR}/libs/([^/]+)/include" matched ${module})
     if(matched AND CMAKE_MATCH_1)
         list(APPEND BOOST_MODULES ${CMAKE_MATCH_1})
         list(APPEND BOOST_DEPS "Boost::${CMAKE_MATCH_1}")
@@ -38,6 +38,8 @@ foreach(module ${BOOST_INCLUDE_DIRS})
 endforeach()
 
 target_include_directories(boost_headers SYSTEM INTERFACE
-    ${BOOST_ROOT}
+    ${BOOST_SOURCE_DIR}
     ${BOOST_INCLUDE_DIRS}
 )
+
+unset(CMAKE_BUILD_TYPE CACHE)

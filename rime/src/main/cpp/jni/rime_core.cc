@@ -1,6 +1,11 @@
 #include "rime_jni.hpp"
 #include "fbjni_alias.hpp"
 
+#include <librime_plugins/rime_proto.capnp.h>
+#include <capnp/message.h>
+#include <capnp/compat/json.h>
+#include <kj/string.h>
+
 namespace rime::jni {
 
 // class JRimeCore : public facebook::jni::HybridClass<JRimeCore>
@@ -121,6 +126,32 @@ namespace rime::jni {
         return rime->deploy_config_file(fn, vk);
     }
 
+// Proto
+    jstring JRimeCore::getCommitProto() {
+        capnp::MallocMessageBuilder message;
+        proto::Commit::Builder commit { message.initRoot<proto::Commit>() };
+        proto->commit_proto(getSession(), &commit);
+        capnp::JsonCodec json;
+        kj::String jsonString { json.encode(commit.asReader()) };
+        return jstring_from_cstr(jsonString.cStr());
+    }
+    jstring JRimeCore::getContextProto() {
+        capnp::MallocMessageBuilder message;
+        proto::Context::Builder context { message.initRoot<proto::Context>() };
+        proto->context_proto(getSession(), &context);
+        capnp::JsonCodec json;
+        kj::String jsonString { json.encode(context.asReader()) };
+        return jstring_from_cstr(jsonString.cStr());
+    }
+    jstring JRimeCore::getStatusProto() {
+        capnp::MallocMessageBuilder message;
+        proto::Status::Builder status { message.initRoot<proto::Status>() };
+        proto->status_proto(getSession(), &status);
+        capnp::JsonCodec json;
+        kj::String jsonString { json.encode(status.asReader()) };
+        return jstring_from_cstr(jsonString.cStr());
+    }
+
 // Register native method
     void JRimeCore::RegisterNatives() {
         registerHybrid(
@@ -152,7 +183,11 @@ namespace rime::jni {
                 makeNativeMethod("highlightCandidate", JRimeCore::highlightCandidate),
                 makeNativeMethod("changePage", JRimeCore::changePage),
                 // Config
-                makeNativeMethod("deployConfigFile", JRimeCore::deployConfigFile)
+                makeNativeMethod("deployConfigFile", JRimeCore::deployConfigFile),
+                // Proto
+                makeNativeMethod("getCommitProto", JRimeCore::getCommitProto),
+                makeNativeMethod("getContextProto", JRimeCore::getContextProto),
+                makeNativeMethod("getStatusProto", JRimeCore::getStatusProto),
             }
         );
     }
@@ -160,7 +195,6 @@ namespace rime::jni {
 // private:
 
     JRimeCore::JRimeCore(jstring sharedDataDir, jstring userDataDir, jstring appName, jobject notification) :
-    notification { make_global(notification) },
     traits {
         std::make_shared<RimeTraitsAndroid> (
             cstr_from_jstring(sharedDataDir).copy(),
@@ -168,7 +202,8 @@ namespace rime::jni {
             rime->get_version(),
             cstr_from_jstring(appName).copy()
         )
-    } {}
+    },
+    notification { make_global(notification) } {}
 
     RimeSessionId JRimeCore::getSession(bool newSession) {
         if (newSession && session)

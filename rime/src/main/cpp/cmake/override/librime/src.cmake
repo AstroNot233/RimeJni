@@ -32,8 +32,6 @@ set(rime_src
     ${rime_plugins_objs}
 )
 
-find_package(Threads REQUIRED)
-
 set(REQUIRED_TARGETS
     "Threads::Threads"
     ${BOOST_DEPS}
@@ -41,6 +39,9 @@ set(REQUIRED_TARGETS
     "marisa"
     "leveldb"
     "libopencc"
+    "capnp"
+    "capnp-rpc"
+    "kj"
 )
 
 list(APPEND $(REQUIRED_TARGETS) dl)

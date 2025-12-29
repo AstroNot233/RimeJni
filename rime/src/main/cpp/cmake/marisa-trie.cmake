@@ -12,6 +12,9 @@ download_and_extract(
 set(ENABLE_STATIC_STDLIB ON CACHE BOOL "")
 set(ENABLE_TOOLS OFF CACHE BOOL "")
 
-add_subdirectory(${MARISA_TRIE_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/marisa_build EXCLUDE_FROM_ALL)
+add_subdirectory(${MARISA_TRIE_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/marisa_build EXCLUDE_FROM_ALL)
 
-add_to_include(marisa "${MARISA_TRIE_ROOT}/include")
+add_to_include(marisa "${MARISA_TRIE_SOURCE_DIR}/include")
+
+unset(ENABLE_STATIC_STDLIB CACHE)
+unset(ENABLE_TOOLS CACHE)

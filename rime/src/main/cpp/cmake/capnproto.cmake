@@ -11,5 +11,10 @@ download_and_extract(
 
 set(BUILD_TESTING OFF CACHE BOOL "Disable tests" FORCE)
 set(CAPNP_BUILD_TESTS OFF CACHE BOOL "Disable capnp tests" FORCE)
+set(CAPNP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 
-add_subdirectory(${CAPNPROTO_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/capnproto_build)
+add_subdirectory(${CAPNPROTO_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/capnproto_build)
+
+unset(BUILD_TESTING)
+unset(CAPNP_BUILD_TESTS)
+unset(CAPNP_BUILD_TOOLS)

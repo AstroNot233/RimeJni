@@ -10,8 +10,11 @@ download_and_extract(
 )
 
 set(USE_SYSTEM_MARISA ON CACHE BOOL "" FORCE)
-set(LIBMARISA marisa)
+set(LIBMARISA marisa CACHE STRING "" FORCE)
 
-add_subdirectory(${OPENCC_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/opencc_build EXCLUDE_FROM_ALL)
+add_subdirectory(${OPENCC_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/opencc_build EXCLUDE_FROM_ALL)
 
 add_to_include(OpenCC "${OPENCC_SOURCE_DIR}/src")
+
+unset(USE_SYSTEM_MARISA CACHE)
+unset(LIBMARISA CACHE)

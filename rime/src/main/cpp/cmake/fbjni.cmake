@@ -11,4 +11,4 @@ download_and_extract(
 
 add_subdirectory(${FBJNI_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/fbjni_build EXCLUDE_FROM_ALL)
 
-add_to_include(fbjni "${FBJNI_ROOT}/cxx/fbjni")
+add_to_include(fbjni "${FBJNI_SOURCE_DIR}/cxx/fbjni")

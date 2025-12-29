@@ -6,10 +6,12 @@
 #include <fbjni/fbjni.h>
 #include <librime/rime_api.h>
 #include <librime/rime/key_table.h>
+#include <librime/rime/module.h>
+#include <librime_plugins/rime_proto_api.h>
 
 namespace rime::jni {
 
-    constexpr auto MAX_BUFFER_LENGTH { 1ULL << 10 };
+    constexpr auto MAX_BUFFER_LENGTH { 1ULL << 10ULL };
 
     struct RimeTraitsAndroid : public RimeTraits {
         RimeTraitsAndroid(char const * sharedDataDir, char const * userDataDir, char const * distributionVersion, char const * appName);
@@ -20,8 +22,11 @@ namespace rime::jni {
     private:
         friend HybridBase;
         std::unique_ptr<RimeApi> const rime { rime_get_api() };
-        facebook::jni::global_ref<facebook::jni::JObject> const notification;
+        std::unique_ptr<RimeProtoApi> const proto {
+            reinterpret_cast<RimeProtoApi *>(ModuleManager::instance().Find("proto")->get_api())
+        };
         std::shared_ptr<RimeTraitsAndroid> const traits;
+        facebook::jni::global_ref<facebook::jni::JObject> const notification;
         RimeSessionId session {};
 
     public:
@@ -63,18 +68,17 @@ namespace rime::jni {
 // Config
         jboolean deployConfigFile(jstring fileName, jstring versionKey);
 
+// Proto
+        jstring getCommitProto();
+        jstring getContextProto();
+        jstring getStatusProto();
+
         static void RegisterNatives();
 
     private:
         JRimeCore(jstring sharedDataDir, jstring userDataDir, jstring appName, jobject callback);
         RimeSessionId getSession(bool newSession = false);
         static void notificationHandler(void * context_object, RimeSessionId session_id, char const * message_type, char const * message_value);
-    };
-
-    class JRimeProto : public facebook::jni::HybridClass<JRimeProto> {
-
-    public:
-        static constexpr auto kJavaDescriptor { "Licu/astronot233/rime/RimeProto;" };
     };
 
     struct JRimeSchemaInfo : public facebook::jni::JavaClass<JRimeSchemaInfo> {

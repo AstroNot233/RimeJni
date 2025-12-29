@@ -27,24 +27,16 @@ target_link_libraries(${JNI_LIB_NAME} PRIVATE
     "fbjni"
     "rime-static"
     "c++_static"
+    "kj"
+    "capnp"
+    "capnp-json"
 )
 
 target_compile_definitions(${JNI_LIB_NAME} PRIVATE
-    -DANDROID
-    -DANDROID_NDK
     -DLOG_TAG="RimeJNI"
 )
 
-target_compile_options(${JNI_LIB_NAME} PRIVATE
-    -frtti
-    -fexceptions
-    -Wall
-    -Werror
-    -O3
-)
-
 target_link_options(${JNI_LIB_NAME} PRIVATE
-    -static-libstdc++
     -Wl,--gc-sections
     -Wl,--as-needed
 )

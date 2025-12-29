@@ -42,7 +42,6 @@ function(download_and_extract dep_name version suffix url sha256)
     endif()
 
     string(REPLACE "-" "_" DEP_NAME_VAR "${DEP_NAME}")
-    set(${DEP_NAME_VAR}_ROOT "${extracted_dir}" PARENT_SCOPE)
     set(${DEP_NAME_VAR}_SOURCE_DIR "${extracted_dir}" PARENT_SCOPE)
     message(STATUS "${dep_name} ready at: ${extracted_dir}")
 endfunction()

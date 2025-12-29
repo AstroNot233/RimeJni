@@ -31,7 +31,16 @@ endforeach(plugin)
 
 set(rime_plugins_objs ${plugins_objs})
 set(rime_plugins_modules ${plugins_modules})
-set(RIME_PLUGINS_INCLUDES ${plugins_includes})
+
+if(EXISTS ${JNI_INCLUDE_DIR}/librime_plugins)
+    file(REMOVE_RECURSE ${JNI_INCLUDE_DIR}/librime_plugins)
+endif()
+file(MAKE_DIRECTORY ${JNI_INCLUDE_DIR}/librime_plugins)
+
+foreach(header ${plugins_includes})
+    get_filename_component(name ${header} NAME)
+    add_to_include(librime_plugins/${name} ${header})
+endforeach()
 
 unset(plugins_objs)
 unset(plugins_modules)

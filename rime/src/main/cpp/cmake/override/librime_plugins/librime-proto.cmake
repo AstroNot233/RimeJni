@@ -30,7 +30,7 @@ add_custom_command(
         -o "${HOST_CAPNPC_CXX}:${CAPNPC_OUTPUT_DIR}"
         --src-prefix "${LIBRIME_PROTO_SOURCE_DIR}"
         -I "${LIBRIME_PROTO_SOURCE_DIR}"
-        -I "${CAPNPROTO_ROOT}/c++/src"
+        -I "${CAPNPROTO_SOURCE_DIR}/c++/src"
         "${LIBRIME_PROTO_SOURCE_DIR}/rime_proto.capnp"
         "${LIBRIME_PROTO_SOURCE_DIR}/rime_ipc.capnp"
     DEPENDS 
@@ -49,11 +49,13 @@ target_include_directories(rime-proto-objs PRIVATE
     ${LIBRIME_PROTO_SOURCE_DIR}
 )
 
-target_link_libraries(rime-proto-objs PRIVATE capnp capnp-rpc kj)
+target_link_libraries(rime-proto-objs PRIVATE kj capnp)
 
 add_library(rime-proto-deps INTERFACE)
-target_link_libraries(rime-proto-deps INTERFACE capnp capnp-rpc kj)
+target_link_libraries(rime-proto-deps INTERFACE kj capnp)
 
 set(plugin_modules "proto")
 set(plugin_objs $<TARGET_OBJECTS:rime-proto-objs>)
-set(plugin_includes ${})
+set(plugin_includes "")
+list(APPEND plugin_includes ${PLUGIN_SRC_DIR}/rime_proto_api.h)
+list(APPEND plugin_includes ${CAPNPC_OUTPUT_DIR}/rime_proto.capnp.h)
