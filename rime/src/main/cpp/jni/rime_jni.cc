@@ -6,7 +6,7 @@ extern "C" {
         rime::jni::JRimeCore::RegisterNatives();
     }
 
-    JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
+    JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM * vm, void * reserved) {
         return facebook::jni::initialize(vm, registerAllNatives);
     }
 

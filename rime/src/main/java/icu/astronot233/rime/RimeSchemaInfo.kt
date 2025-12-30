@@ -1,6 +1,9 @@
 package icu.astronot233.rime
 
-class RimeSchemaInfo private constructor(val schemaId: String, val schemaName: String) {
+data class RimeSchemaInfo private constructor(
+    val schemaId:   String,
+    val schemaName: String,
+) {
 
     companion object {
         @JvmStatic  // Factory method

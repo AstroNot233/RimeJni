@@ -1,11 +1,14 @@
 package icu.astronot233.rime
 
-class RimeCore {
-    
+class RimeApi {
+
     companion object {
         @JvmStatic  // Factory method
-        external fun create(sharedDataDir: String, userDataDir: String,
-                            appName: String, notification: RimeNotificationHandler): RimeCore
+        external fun create(
+            sharedDataDir: String,
+            userDataDir: String,
+            appName: String,
+        ): RimeApi
         init { System.loadLibrary("rime-jni") }
     }
     // Lifecycle
@@ -34,5 +37,12 @@ class RimeCore {
     external fun changePage(backward: Boolean): Boolean
     // Config
     external fun deployConfigFile(fileName: String, versionKey: String): Boolean
+    // Proto
+    private external fun getCommitProtoJson(): String
+    private external fun getContextProtoJson(): String
+    private external fun getStatusProtoJson(): String
+    val commit get() = Commit.fromJson(getCommitProtoJson())
+    val context get() = Context.fromJson(getContextProtoJson())
+    val status get() = Status.fromJson(getStatusProtoJson())
 
 }

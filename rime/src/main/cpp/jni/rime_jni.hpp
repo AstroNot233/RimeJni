@@ -14,7 +14,12 @@ namespace rime::jni {
     constexpr auto MAX_BUFFER_LENGTH { 1ULL << 10ULL };
 
     struct RimeTraitsAndroid : public RimeTraits {
-        RimeTraitsAndroid(char const * sharedDataDir, char const * userDataDir, char const * distributionVersion, char const * appName);
+        RimeTraitsAndroid(
+            char const * sharedDataDir,
+            char const * userDataDir,
+            char const * distributionVersion,
+            char const * appName
+        );
         ~RimeTraitsAndroid();
     };
 
@@ -22,19 +27,20 @@ namespace rime::jni {
     private:
         friend HybridBase;
         std::unique_ptr<RimeApi> const rime { rime_get_api() };
-        std::unique_ptr<RimeProtoApi> const proto {
-            reinterpret_cast<RimeProtoApi *>(ModuleManager::instance().Find("proto")->get_api())
-        };
+        std::unique_ptr<RimeProtoApi> const proto { reinterpret_cast<RimeProtoApi *>(
+            ModuleManager::instance().Find("proto")->get_api()
+        )};
         std::shared_ptr<RimeTraitsAndroid> const traits;
-        facebook::jni::global_ref<facebook::jni::JObject> const notification;
         RimeSessionId session {};
 
     public:
-        static constexpr auto kJavaDescriptor { "Licu/astronot233/rime/RimeCore;" };
+        static constexpr auto kJavaDescriptor { "Licu/astronot233/rime/RimeApi;" };
 
 // Factory method
-        static facebook::jni::local_ref<JRimeCore::javaobject> create (facebook::jni::alias_ref<facebook::jni::JClass> /*self*/,
-                jstring sharedDataDir, jstring userDataDir, jstring appName, jobject callback);
+        static facebook::jni::local_ref<JRimeCore::javaobject> create(
+            facebook::jni::alias_ref<facebook::jni::JClass> /*self*/,
+            jstring sharedDataDir, jstring userDataDir, jstring appName
+        );
 
 // Lifecycle
         jboolean startup(jboolean fullCheck);
@@ -76,7 +82,7 @@ namespace rime::jni {
         static void RegisterNatives();
 
     private:
-        JRimeCore(jstring sharedDataDir, jstring userDataDir, jstring appName, jobject callback);
+        JRimeCore(jstring sharedDataDir, jstring userDataDir, jstring appName);
         RimeSessionId getSession(bool newSession = false);
         static void notificationHandler(void * context_object, RimeSessionId session_id, char const * message_type, char const * message_value);
     };

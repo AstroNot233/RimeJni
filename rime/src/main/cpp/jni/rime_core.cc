@@ -8,18 +8,27 @@
 
 namespace rime::jni {
 
+    RimeNotificationHandler const disableCallback {
+        [](
+            void * context_object,
+            RimeSessionId session_id,
+            char const * message_type,
+            char const * message_value
+        ) {} 
+    }; // Callback is implemented in Kotlin.
+
 // class JRimeCore : public facebook::jni::HybridClass<JRimeCore>
 
 // Factory method
-    local_ref<JRimeCore::javaobject> JRimeCore::create(alias_ref<JClass> /*self*/, jstring sharedDataDir, jstring userDataDir, jstring appName, jobject notification) {
-        return newObjectCxxArgs(sharedDataDir, userDataDir, appName, notification);
+    local_ref<JRimeCore::javaobject> JRimeCore::create(alias_ref<JClass> /*self*/, jstring sharedDataDir, jstring userDataDir, jstring appName) {
+        return newObjectCxxArgs(sharedDataDir, userDataDir, appName);
     }
 
 // Lifecycle
     jboolean JRimeCore::startup(jboolean fullCheck) {
         rime->setup(traits.get());
         rime->initialize(traits.get());
-        rime->set_notification_handler(notificationHandler, const_cast<JRimeCore *>(this));
+        rime->set_notification_handler(disableCallback, nullptr);
         return rime->start_maintenance(fullCheck);
     }
     void JRimeCore::shutdown() {
@@ -154,47 +163,45 @@ namespace rime::jni {
 
 // Register native method
     void JRimeCore::RegisterNatives() {
-        registerHybrid(
-            {
-                // Factory method
-                makeNativeMethod("create", JRimeCore::create),
-                // Lifecycle
-                makeNativeMethod("startup", JRimeCore::startup),
-                makeNativeMethod("shutdown", JRimeCore::shutdown),
-                makeNativeMethod("syncUserData", JRimeCore::syncUserData),
-                // IO behavior
-                makeNativeMethod("processKey", JRimeCore::processKey),
-                makeNativeMethod("simulateKeySequence", JRimeCore::simulateKeySequence),
-                makeNativeMethod("commitComposition", JRimeCore::commitComposition),
-                makeNativeMethod("clearComposition", JRimeCore::clearComposition),
-                // Option
-                makeNativeMethod("setOption", JRimeCore::setOption),
-                makeNativeMethod("getOption", JRimeCore::getOption),
-                makeNativeMethod("setProperty", JRimeCore::setProperty),
-                makeNativeMethod("getProperty", JRimeCore::getProperty),
-                // Schema
-                makeNativeMethod("deploySchema", JRimeCore::deploySchema),
-                makeNativeMethod("getSchemaList", JRimeCore::getSchemaList),
-                makeNativeMethod("getCurrentSchemaId", JRimeCore::getCurrentSchemaId),
-                makeNativeMethod("selectSchema", JRimeCore::selectSchema),
-                // Candidate and page
-                makeNativeMethod("selectCandidate", JRimeCore::selectCandidate),
-                makeNativeMethod("deleteCandidate", JRimeCore::deleteCandidate),
-                makeNativeMethod("highlightCandidate", JRimeCore::highlightCandidate),
-                makeNativeMethod("changePage", JRimeCore::changePage),
-                // Config
-                makeNativeMethod("deployConfigFile", JRimeCore::deployConfigFile),
-                // Proto
-                makeNativeMethod("getCommitProto", JRimeCore::getCommitProto),
-                makeNativeMethod("getContextProto", JRimeCore::getContextProto),
-                makeNativeMethod("getStatusProto", JRimeCore::getStatusProto),
-            }
-        );
+        return registerHybrid({
+            // Factory method
+            makeNativeMethod("create", JRimeCore::create),
+            // Lifecycle
+            makeNativeMethod("startup", JRimeCore::startup),
+            makeNativeMethod("shutdown", JRimeCore::shutdown),
+            makeNativeMethod("syncUserData", JRimeCore::syncUserData),
+            // IO behavior
+            makeNativeMethod("processKey", JRimeCore::processKey),
+            makeNativeMethod("simulateKeySequence", JRimeCore::simulateKeySequence),
+            makeNativeMethod("commitComposition", JRimeCore::commitComposition),
+            makeNativeMethod("clearComposition", JRimeCore::clearComposition),
+            // Option
+            makeNativeMethod("setOption", JRimeCore::setOption),
+            makeNativeMethod("getOption", JRimeCore::getOption),
+            makeNativeMethod("setProperty", JRimeCore::setProperty),
+            makeNativeMethod("getProperty", JRimeCore::getProperty),
+            // Schema
+            makeNativeMethod("deploySchema", JRimeCore::deploySchema),
+            makeNativeMethod("getSchemaList", JRimeCore::getSchemaList),
+            makeNativeMethod("getCurrentSchemaId", JRimeCore::getCurrentSchemaId),
+            makeNativeMethod("selectSchema", JRimeCore::selectSchema),
+            // Candidate and page
+            makeNativeMethod("selectCandidate", JRimeCore::selectCandidate),
+            makeNativeMethod("deleteCandidate", JRimeCore::deleteCandidate),
+            makeNativeMethod("highlightCandidate", JRimeCore::highlightCandidate),
+            makeNativeMethod("changePage", JRimeCore::changePage),
+            // Config
+            makeNativeMethod("deployConfigFile", JRimeCore::deployConfigFile),
+            // Proto
+            makeNativeMethod("getCommitProtoJson", JRimeCore::getCommitProto),
+            makeNativeMethod("getContextProtoJson", JRimeCore::getContextProto),
+            makeNativeMethod("getStatusProtoJson", JRimeCore::getStatusProto)
+        });
     }
 
 // private:
 
-    JRimeCore::JRimeCore(jstring sharedDataDir, jstring userDataDir, jstring appName, jobject notification) :
+    JRimeCore::JRimeCore(jstring sharedDataDir, jstring userDataDir, jstring appName) :
     traits {
         std::make_shared<RimeTraitsAndroid> (
             cstr_from_jstring(sharedDataDir).copy(),
@@ -202,8 +209,7 @@ namespace rime::jni {
             rime->get_version(),
             cstr_from_jstring(appName).copy()
         )
-    },
-    notification { make_global(notification) } {}
+    } {}
 
     RimeSessionId JRimeCore::getSession(bool newSession) {
         if (newSession && session)
@@ -211,21 +217,6 @@ namespace rime::jni {
         if (!session)
             session = rime->create_session();
         return session;
-    }
-
-    void JRimeCore::notificationHandler(void * context_object, RimeSessionId session_id, char const * message_type, char const * message_value) {
-    auto const notification = static_cast<JRimeCore *>(context_object)->notification;
-    // notification.handleRimeNotification(message_type, message_value)
-        if (
-            !(notification->getClass()->
-            getMethod<jboolean(jstring, jstring)>("handleRimeNotification"))(
-                notification.get(),
-                jstring_from_cstr(message_type),
-                jstring_from_cstr(message_value)
-            )
-        ) {
-            // TODO: log
-        }
     }
 
 }
