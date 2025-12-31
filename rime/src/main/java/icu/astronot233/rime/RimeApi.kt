@@ -22,8 +22,8 @@ class RimeApi {
     external fun clearComposition(): Boolean
     // Option
     external fun setOption(option: String, value: Boolean)
-    external fun getOption(option: String): String
-    external fun setProperty(property: String, value: Boolean)
+    external fun getOption(option: String): Boolean
+    external fun setProperty(property: String, value: String)
     external fun getProperty(property: String): String
     // Schema
     external fun deploySchema(schemaFile: String): Boolean
@@ -41,8 +41,8 @@ class RimeApi {
     private external fun getCommitProtoJson(): String
     private external fun getContextProtoJson(): String
     private external fun getStatusProtoJson(): String
-    val commit get() = Commit.fromJson(getCommitProtoJson())
-    val context get() = Context.fromJson(getContextProtoJson())
-    val status get() = Status.fromJson(getStatusProtoJson())
+    val commit get() = CommitProto.fromJson(getCommitProtoJson())
+    val context get() = ContextProto.fromJson(getContextProtoJson())
+    val status get() = StatusProto.fromJson(getStatusProtoJson())
 
 }

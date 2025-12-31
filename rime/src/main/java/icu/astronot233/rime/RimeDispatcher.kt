@@ -15,23 +15,31 @@ class RimeDispatcher: CoroutineDispatcher() {
 
     private val scope = CoroutineScope(this + SupervisorJob())
     private val queue = LinkedBlockingQueue<Runnable>()
-    private val thread = Thread(
-        {
-            try {
-                while (true) queue.take().run()
-            } catch (e: InterruptedException) {
-                // Ignore
-            }
-        },
-        "rime-android"
-    ).apply { start() }
+    private var thread: Thread? = null
+    private val alive get() = (thread?.isAlive ?: false)
     
+    fun startup() {
+        if (alive) return
+        queue.clear()
+        thread = Thread(
+            {
+                try { while (true) queue.take().run() }
+                catch (e: InterruptedException) { /* Ignore */ }
+            },
+            "rime-android"
+        ).apply { start() }
+    }
+
     fun shutdown() {
+        if (!alive) return
         scope.cancel()
-        thread.interrupt()
+        thread!!.interrupt()
+        thread = null
     }
     
     override fun dispatch(context: CoroutineContext, block: Runnable) {
+        if (!alive)
+            return
         queue.offer(block)
     }
 

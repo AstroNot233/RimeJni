@@ -5,15 +5,15 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 
-@Serializable data class Commit private constructor(
+@Serializable data class CommitProto(
     val text: String = "",
 ) {
     companion object {
-        fun fromJson(json: String): Commit = Json.decodeFromString<Commit>(json)
+        fun fromJson(json: String) = Json.decodeFromString<CommitProto>(json)
     }
 }
 
-@Serializable data class Context private constructor(
+@Serializable data class ContextProto(
     val composition: Composition = Composition(),
     val menu:        Menu        = Menu(),
     val input:       String      = "",
@@ -42,11 +42,11 @@ import kotlinx.serialization.SerialName
         val label:   String = "",
     )
     companion object {
-        fun fromJson(json: String): Context = Json.decodeFromString<Context>(json)
+        fun fromJson(json: String) = Json.decodeFromString<ContextProto>(json)
     }
 }
 
-@Serializable data class Status private constructor(
+@Serializable data class StatusProto(
     val schemaId:    String  = "",
     val disabled:    Boolean = false,
     val composing:   Boolean = false,
@@ -57,6 +57,6 @@ import kotlinx.serialization.SerialName
     val asciiPunct:  Boolean = false,
 ) {
     companion object {
-        fun fromJson(json: String): Status = Json.decodeFromString<Status>(json)
+        fun fromJson(json: String) = Json.decodeFromString<StatusProto>(json)
     }
 }

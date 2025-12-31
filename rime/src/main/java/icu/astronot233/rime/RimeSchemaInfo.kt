@@ -1,6 +1,6 @@
 package icu.astronot233.rime
 
-data class RimeSchemaInfo private constructor(
+data class RimeSchemaInfo(
     val schemaId:   String,
     val schemaName: String,
 ) {
