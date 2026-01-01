@@ -1,46 +1,49 @@
 package icu.astronot233.rime
 
-class RimeApi {
-
-    companion object {
-        @JvmStatic  // Factory method
-        external fun create(
-            sharedDataDir: String,
-            userDataDir: String,
-            appName: String,
-        ): RimeApi
-        init { System.loadLibrary("rime-jni") }
+object RimeApi {
+    
+    init {
+        System.loadLibrary("rime-jni")
     }
+
+    @JvmStatic external fun initialize(
+        sharedDataDir: String,
+        userDataDir: String,
+        appName: String,
+    ): Boolean
+
     // Lifecycle
-    external fun startup(fullCheck: Boolean = false): Boolean
-    external fun shutdown()
-    external fun syncUserData(): Boolean
+    @JvmStatic private external fun startupImpl(fullCheck: Boolean): Boolean
+    @JvmStatic fun startup(fullCheck: Boolean = false): Boolean = startupImpl(fullCheck)
+    @JvmStatic external fun shutdown()
+    @JvmStatic external fun syncUserData(): Boolean
     // IO behavior
-    external fun processKey(keyCode: Int, mask: Int = 0): Boolean
-    external fun simulateKeySequence(sequence: String): Boolean
-    external fun commitComposition(): Boolean
-    external fun clearComposition(): Boolean
+    @JvmStatic private external fun processKeyImpl(keyCode: Int, mask: Int): Boolean
+    @JvmStatic fun processKey(keyCode: Int, mask: Int = 0): Boolean = processKeyImpl(keyCode, mask)
+    @JvmStatic external fun simulateKeySequence(sequence: String): Boolean
+    @JvmStatic external fun commitComposition(): Boolean
+    @JvmStatic external fun clearComposition()
     // Option
-    external fun setOption(option: String, value: Boolean)
-    external fun getOption(option: String): Boolean
-    external fun setProperty(property: String, value: String)
-    external fun getProperty(property: String): String
+    @JvmStatic external fun setOption(option: String, value: Boolean)
+    @JvmStatic external fun getOption(option: String): Boolean
+    @JvmStatic external fun setProperty(property: String, value: String)
+    @JvmStatic external fun getProperty(property: String): String
     // Schema
-    external fun deploySchema(schemaFile: String): Boolean
-    external fun getSchemaList(): Array<RimeSchemaInfo>
-    external fun getCurrentSchemaId(): String
-    external fun selectSchema(schemaId: String): Boolean
+    @JvmStatic external fun deploySchema(schemaFile: String): Boolean
+    @JvmStatic external fun getSchemaList(): Array<RimeSchemaInfo>
+    @JvmStatic external fun getCurrentSchemaId(): String
+    @JvmStatic external fun selectSchema(schemaId: String): Boolean
     // Candidate and page
-    external fun selectCandidate(index: Int): Boolean
-    external fun deleteCandidate(index: Int): Boolean
-    external fun highlightCandidate(index: Int): Boolean
-    external fun changePage(backward: Boolean): Boolean
+    @JvmStatic external fun selectCandidate(index: Int): Boolean
+    @JvmStatic external fun deleteCandidate(index: Int): Boolean
+    @JvmStatic external fun highlightCandidate(index: Int): Boolean
+    @JvmStatic external fun changePage(backward: Boolean): Boolean
     // Config
-    external fun deployConfigFile(fileName: String, versionKey: String): Boolean
+    @JvmStatic external fun deployConfigFile(fileName: String, versionKey: String): Boolean
     // Proto
-    private external fun getCommitProtoJson(): String
-    private external fun getContextProtoJson(): String
-    private external fun getStatusProtoJson(): String
+    @JvmStatic private external fun getCommitProtoJson(): String
+    @JvmStatic private external fun getContextProtoJson(): String
+    @JvmStatic private external fun getStatusProtoJson(): String
     val commit get() = CommitProto.fromJson(getCommitProtoJson())
     val context get() = ContextProto.fromJson(getContextProtoJson())
     val status get() = StatusProto.fromJson(getStatusProtoJson())

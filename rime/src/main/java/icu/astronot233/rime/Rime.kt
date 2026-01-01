@@ -6,8 +6,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import icu.astronot233.rime.SyncStage
+import icu.astronot233.rime.RimeApi
 
 class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
+
+    init {
+        RimeApi.initialize(sharedDataDir, userDataDir, appName)
+    }
     
     private val dispatcher = RimeDispatcher()
     private val msgFlow = MutableSharedFlow<RimeMessage>(
@@ -15,9 +20,8 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
         extraBufferCapacity = 16,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
-    private val ctxFlow = MutableStateFlow(ContextProto())
-    private val stsFlow = MutableStateFlow(StatusProto())
-    private val api = RimeApi.create(sharedDataDir, userDataDir, appName)
+    private val ctxFlow = MutableStateFlow(RimeApi.context)
+    private val stsFlow = MutableStateFlow(RimeApi.status)
 
     val messageFlow = msgFlow.asSharedFlow()
     val contextFlow = ctxFlow.asStateFlow()
@@ -26,16 +30,16 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
     // Lifecycle
     fun startup(fullCheck: Boolean = false): Boolean {
         dispatcher.startup()
-        return api.startup(fullCheck)
+        return RimeApi.startup(fullCheck)
     }
     fun shutdown() {
-        api.shutdown()
+        RimeApi.shutdown()
         dispatcher.shutdown()
     }
     suspend fun deploy(): Boolean = dispatcher.execute {
         msgFlow.emit(RimeMessage.Deploy(DeployStage.Startup))
-        api.shutdown()
-        if (api.startup(true)) {
+        RimeApi.shutdown()
+        if (RimeApi.startup(true)) {
             msgFlow.emit(RimeMessage.Deploy(DeployStage.Success))
             true
         } else {
@@ -45,7 +49,7 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
     }
     suspend fun syncUserData(): Boolean = dispatcher.execute {
         msgFlow.emit(RimeMessage.Sync(SyncStage.Startup))
-        if (api.syncUserData()) {
+        if (RimeApi.syncUserData()) {
             msgFlow.emit(RimeMessage.Sync(SyncStage.Success))
             true
         } else {
@@ -56,66 +60,66 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
 
     // IO behavior
     suspend fun processKey(keyCode: Int, mask: Int = 0): Boolean = dispatcher.execute {
-        if (api.processKey(keyCode, mask)) {
-            ctxFlow.value = api.context
-            stsFlow.value = api.status
-            if (api.commit.text.isNotEmpty())
-                msgFlow.emit(RimeMessage.Commit(api.commit))
+        if (RimeApi.processKey(keyCode, mask)) {
+            ctxFlow.value = RimeApi.context
+            stsFlow.value = RimeApi.status
+            if (RimeApi.commit.text.isNotEmpty())
+                msgFlow.emit(RimeMessage.Commit(RimeApi.commit))
             true
         } else {
             false
         }
     }
     suspend fun simulateKeySequence(sequence: String): Boolean = dispatcher.execute {
-        if (api.simulateKeySequence(sequence)) {
-            ctxFlow.value = api.context
-            stsFlow.value = api.status
-            if (api.commit.text.isNotEmpty())
-                msgFlow.emit(RimeMessage.Commit(api.commit))
+        if (RimeApi.simulateKeySequence(sequence)) {
+            ctxFlow.value = RimeApi.context
+            stsFlow.value = RimeApi.status
+            if (RimeApi.commit.text.isNotEmpty())
+                msgFlow.emit(RimeMessage.Commit(RimeApi.commit))
             true
         } else {
             false
         }
     }
     suspend fun commitComposition(): Boolean = dispatcher.execute {
-        if (api.commitComposition()) {
-            ctxFlow.value = api.context
-            stsFlow.value = api.status
-            msgFlow.emit(RimeMessage.Commit(api.commit))
+        if (RimeApi.commitComposition()) {
+            ctxFlow.value = RimeApi.context
+            stsFlow.value = RimeApi.status
+            msgFlow.emit(RimeMessage.Commit(RimeApi.commit))
             true
         } else {
             false
         }
     }
     suspend fun clearComposition() = dispatcher.execute {
-        api.clearComposition()
-        ctxFlow.value = api.context
-        stsFlow.value = api.status
+        RimeApi.clearComposition()
+        ctxFlow.value = RimeApi.context
+        stsFlow.value = RimeApi.status
     }
 
     // Option
     suspend fun setOption(option: String, value: Boolean) = dispatcher.execute {
-        api.setOption(option, value)
-        stsFlow.value = api.status
+        RimeApi.setOption(option, value)
+        stsFlow.value = RimeApi.status
     }
     suspend fun getOption(option: String): Boolean = dispatcher.execute {
-        api.getOption(option)
+        RimeApi.getOption(option)
     }
     suspend fun setProperty(property: String, value: String) = dispatcher.execute {
-        api.setProperty(property, value)
-        stsFlow.value = api.status
+        RimeApi.setProperty(property, value)
+        stsFlow.value = RimeApi.status
     }
     suspend fun getProperty(property: String): String = dispatcher.execute {
-        api.getProperty(property)
+        RimeApi.getProperty(property)
     }
 
     // Schema
     suspend fun deploySchema(schema: String): Boolean = dispatcher.execute {
         msgFlow.emit(RimeMessage.Deploy(DeployStage.Startup))
-        if (api.deploySchema(schema)) {
+        if (RimeApi.deploySchema(schema)) {
             msgFlow.emit(RimeMessage.Deploy(DeployStage.Success))
-            ctxFlow.value = api.context
-            stsFlow.value = api.status
+            ctxFlow.value = RimeApi.context
+            stsFlow.value = RimeApi.status
             true
         } else {
             msgFlow.emit(RimeMessage.Deploy(DeployStage.Unknown))
@@ -123,49 +127,49 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
         }
     }
     suspend fun getSchemaList(): Array<RimeSchemaInfo> = dispatcher.execute {
-        api.getSchemaList()
+        RimeApi.getSchemaList()
     }
     suspend fun getCurrentSchemaId(): String = dispatcher.execute {
-        api.getCurrentSchemaId()
+        RimeApi.getCurrentSchemaId()
     }
     suspend fun selectSchema(schema: String) = dispatcher.execute {
-        api.selectSchema(schema)
-        ctxFlow.value = api.context
-        stsFlow.value = api.status
+        RimeApi.selectSchema(schema)
+        ctxFlow.value = RimeApi.context
+        stsFlow.value = RimeApi.status
     }
 
     // Candidate and page
     suspend fun selectCandidate(index: Int): Boolean = dispatcher.execute {
-        if (api.selectCandidate(index)) {
-            ctxFlow.value = api.context
-            stsFlow.value = api.status
+        if (RimeApi.selectCandidate(index)) {
+            ctxFlow.value = RimeApi.context
+            stsFlow.value = RimeApi.status
             true
         } else {
             false
         }
     }
     suspend fun deleteCandidate(index: Int): Boolean = dispatcher.execute {
-        if (api.deleteCandidate(index)) {
-            ctxFlow.value = api.context
-            stsFlow.value = api.status
+        if (RimeApi.deleteCandidate(index)) {
+            ctxFlow.value = RimeApi.context
+            stsFlow.value = RimeApi.status
             true
         } else {
             false
         }
     }
     suspend fun highlightCandidate(index: Int): Boolean = dispatcher.execute {
-        if (api.highlightCandidate(index)) {
-            ctxFlow.value = api.context
-            stsFlow.value = api.status
+        if (RimeApi.highlightCandidate(index)) {
+            ctxFlow.value = RimeApi.context
+            stsFlow.value = RimeApi.status
             true
         } else {
             false
         }
     }
     suspend fun changePage(backward: Boolean): Boolean = dispatcher.execute {
-        if (api.changePage(backward)) {
-            ctxFlow.value = api.context
-            stsFlow.value = api.status
+        if (RimeApi.changePage(backward)) {
+            ctxFlow.value = RimeApi.context
+            stsFlow.value = RimeApi.status
             true
         } else {
             false
@@ -175,10 +179,10 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
     // Config
     suspend fun deployConfigFile(fileName: String, versionKey: String): Boolean = dispatcher.execute {
         msgFlow.emit(RimeMessage.Deploy(DeployStage.Startup))
-        if (api.deployConfigFile(fileName, versionKey)) {
+        if (RimeApi.deployConfigFile(fileName, versionKey)) {
             msgFlow.emit(RimeMessage.Deploy(DeployStage.Success))
-            ctxFlow.value = api.context
-            stsFlow.value = api.status
+            ctxFlow.value = RimeApi.context
+            stsFlow.value = RimeApi.status
             true
         } else {
             msgFlow.emit(RimeMessage.Deploy(DeployStage.Unknown))
@@ -187,8 +191,8 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
     }
 
     // Proto
-    suspend fun getCommit(): CommitProto = dispatcher.execute { api.commit }
-    suspend fun getContext(): ContextProto = dispatcher.execute { api.context }
-    suspend fun getStatus(): StatusProto = dispatcher.execute { api.status }
+    suspend fun getCommit(): CommitProto = dispatcher.execute { RimeApi.commit }
+    suspend fun getContext(): ContextProto = dispatcher.execute { RimeApi.context }
+    suspend fun getStatus(): StatusProto = dispatcher.execute { RimeApi.status }
 
 }

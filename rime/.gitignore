@@ -3,6 +3,6 @@
 src/androidTest/
 src/test/
 
-src/main/cpp/deps/
-src/main/cpp/Downloads
-src/main/cpp/include/
+src/main/jni/deps/
+src/main/jni/Downloads
+src/main/jni/include/
