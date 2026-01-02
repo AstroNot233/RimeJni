@@ -39,9 +39,6 @@ set(REQUIRED_TARGETS
     "marisa"
     "leveldb"
     "libopencc"
-    "capnp"
-    "capnp-rpc"
-    "kj"
 )
 
 list(APPEND $(REQUIRED_TARGETS) dl)

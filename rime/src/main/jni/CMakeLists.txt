@@ -31,7 +31,6 @@ include(Boost)
 include(LevelDB)
 include(yaml-cpp)
 include(marisa-trie)
-include(capnproto)
 include(OpenCC)
 include(librime)
 

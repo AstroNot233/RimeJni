@@ -27,7 +27,7 @@ sealed class RimeMessage() {
     data class Sync(val value: SyncStage): RimeMessage() {    
         override val type: MessageType = MessageType.Sync
     }
-    data class Commit(val value: CommitProto): RimeMessage() {
+    data class Commit(val value: String): RimeMessage() {
         override val type: MessageType = MessageType.Commit
     }
 

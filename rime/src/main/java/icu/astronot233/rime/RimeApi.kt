@@ -30,22 +30,19 @@ object RimeApi {
     @JvmStatic external fun getProperty(property: String): String
     // Schema
     @JvmStatic external fun deploySchema(schemaFile: String): Boolean
-    @JvmStatic external fun getSchemaList(): Array<RimeSchemaInfo>
+    @JvmStatic external fun getSchemata(): Array<RimeSchema>
     @JvmStatic external fun getCurrentSchemaId(): String
     @JvmStatic external fun selectSchema(schemaId: String): Boolean
     // Candidate and page
+    @JvmStatic external fun getCandidates(): Array<RimeCandidate>
     @JvmStatic external fun selectCandidate(index: Int): Boolean
     @JvmStatic external fun deleteCandidate(index: Int): Boolean
     @JvmStatic external fun highlightCandidate(index: Int): Boolean
     @JvmStatic external fun changePage(backward: Boolean): Boolean
     // Config
     @JvmStatic external fun deployConfigFile(fileName: String, versionKey: String): Boolean
-    // Proto
-    @JvmStatic private external fun getCommitProtoJson(): String
-    @JvmStatic private external fun getContextProtoJson(): String
-    @JvmStatic private external fun getStatusProtoJson(): String
-    val commit get() = CommitProto.fromJson(getCommitProtoJson())
-    val context get() = ContextProto.fromJson(getContextProtoJson())
-    val status get() = StatusProto.fromJson(getStatusProtoJson())
+    // Query
+    @JvmStatic external fun getCommit(): String
+    @JvmStatic external fun getPreedit(): String
 
 }

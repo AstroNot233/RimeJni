@@ -28,16 +28,12 @@ set_target_properties(${JNI_LIB_NAME} PROPERTIES
 
 target_include_directories(${JNI_LIB_NAME} PRIVATE
     ${JNI_SOURCE_DIR}
-    ${JNI_SOURCE_DIR}/proto
     ${JNI_INCLUDE_DIR}
 )
 
 target_link_libraries(${JNI_LIB_NAME} PRIVATE
     "rime-static"
     "c++_static"
-    "kj"
-    "capnp"
-    "capnp-json"
     "log"
 )
 

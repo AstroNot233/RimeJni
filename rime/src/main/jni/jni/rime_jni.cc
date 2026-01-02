@@ -1,9 +1,21 @@
 #include "rime_jni.hpp"
+#include <jni.h>
 
 extern void rime_require_module_lua();
 extern void rime_require_module_predict();
 
 using namespace rime::jni;
+
+std::string stringJavaToCxx(JNIEnv * env, jstring jstr) {
+    if (!jstr) return {};
+    char const * chars { env->GetStringUTFChars(jstr, nullptr) };
+    std::string str { chars };
+    env->ReleaseStringUTFChars(jstr, chars);
+    return str;
+}
+jstring stringCxxToJava(JNIEnv * env, std::string const & str) {
+    return env->NewStringUTF(str.c_str());
+}
 
 static std::unique_ptr<JRimeCore> instance { nullptr };
 bool createInstance(std::string const & sharedDir, std::string const & userDir, std::string const & appName) {
@@ -80,18 +92,18 @@ static jboolean deploySchema_RimeApi(JNIEnv* env, jclass /*class*/, jstring sche
     std::string sF { stringJavaToCxx(env, schemaFile) };
     return getInstance()->deploySchema(sF);
 }
-static jobjectArray getSchemaList_RimeApi(JNIEnv* env, jclass /*class*/) {
-    jclass className { env->FindClass("icu/astronot233/rime/RimeSchemaInfo") };
+static jobjectArray getSchemata_RimeApi(JNIEnv* env, jclass /*class*/) {
+    jclass className { env->FindClass("icu/astronot233/rime/RimeSchema") };
     if (!className)
-        throw std::runtime_error("RimeSchemaInfo class not found");
+        throw std::runtime_error("RimeSchema class not found");
     jmethodID factoryMethod { env->GetStaticMethodID(
         className,
         "create", 
-        "(Ljava/lang/String;Ljava/lang/String;)Licu/astronot233/rime/RimeSchemaInfo;"
+        "(Ljava/lang/String;Ljava/lang/String;)Licu/astronot233/rime/RimeSchema;"
     ) };
     if (!factoryMethod)
-        throw std::runtime_error("RimeSchemaInfo.create method not found");
-    std::vector<JRimeSchemaInfo> sL { getInstance()->getSchemaList() };
+        throw std::runtime_error("RimeSchema.create method not found");
+    std::vector<JRimeSchema> sL { getInstance()->getSchemata() };
     jobjectArray result { env->NewObjectArray( sL.size(), className, nullptr) };
     if (!result)
         throw std::runtime_error("Failed to create schema list");
@@ -102,7 +114,7 @@ static jobjectArray getSchemaList_RimeApi(JNIEnv* env, jclass /*class*/) {
         env->DeleteLocalRef(sI);
         env->DeleteLocalRef(sN);
         if (!obj)
-            throw std::runtime_error("Failed to create schema info");
+            throw std::runtime_error("Failed to create schema");
         env->SetObjectArrayElement(result, i, obj);
         env->DeleteLocalRef(obj);
     }
@@ -119,6 +131,35 @@ static jboolean selectSchema_RimeApi(JNIEnv* env, jclass /*class*/, jstring sche
 }
 
 // Candidate and paging
+static jobjectArray getCandidates_RimeApi(JNIEnv* env, jclass /*class*/) {
+    jclass className { env->FindClass("icu/astronot233/rime/RimeCandidate") };
+    if (!className)
+        throw std::runtime_error("RimeCandidate class not found");
+    jmethodID factoryMethod { env->GetStaticMethodID(
+        className,
+        "create",
+        "(Ljava/lang/String;Ljava/lang/String;)Licu/astronot233/rime/RimeCandidate;"
+    ) };
+    if (!factoryMethod)
+        throw std::runtime_error("RimeCandidate.create method not found");
+    std::vector<JRimeCandidate> cL { getInstance()->getCandidates() };
+    jobjectArray result { env->NewObjectArray( cL.size(), className, nullptr) };
+    if (!result)
+        throw std::runtime_error("Failed to create candidate list");
+    for (size_t i { 0 }; i < cL.size(); ++i) {
+        jstring cT { stringCxxToJava(env, cL[i].text) };
+        jstring cC { stringCxxToJava(env, cL[i].comment) };
+        jobject obj { env->CallStaticObjectMethod(className, factoryMethod, cT, cC) };
+        env->DeleteLocalRef(cT);
+        env->DeleteLocalRef(cC);
+        if (!obj)
+            throw std::runtime_error("Failed to create candidate");
+        env->SetObjectArrayElement(result, i, obj);
+        env->DeleteLocalRef(obj);
+    }
+    env->DeleteLocalRef(className);
+    return result;
+}
 static jboolean selectCandidate_RimeApi(JNIEnv* /*env*/, jclass /*class*/, jint index) {
     return getInstance()->selectCandidate(index);
 }
@@ -139,18 +180,12 @@ static jboolean deployConfigFile_RimeApi(JNIEnv* env, jclass /*class*/, jstring 
     return getInstance()->deployConfigFile(fN, vK);
 }
 
-// Proto
-static jstring getCommitProtoJson_RimeApi(JNIEnv* env, jclass /*class*/) {
-    std::string cP { getInstance()->getCommitProtoJson() };
-    return stringCxxToJava(env, cP);
+// Query
+static jstring getCommit_RimeApi(JNIEnv* env, jclass /*class*/) {
+    return stringCxxToJava(env, getInstance()->getCommit() );
 }
-static jstring getContextProtoJson_RimeApi(JNIEnv* env, jclass /*class*/) {
-    std::string cP { getInstance()->getContextProtoJson() };
-    return stringCxxToJava(env, cP);
-}
-static jstring getStatusProtoJson_RimeApi(JNIEnv* env, jclass /*class*/) {
-    std::string sP { getInstance()->getStatusProtoJson() };
-    return stringCxxToJava(env, sP);
+static jstring getPreedit_RimeApi(JNIEnv* env, jclass /*class*/) {
+    return stringCxxToJava(env, getInstance()->getPreedit() );
 }
 
 static JNINativeMethod const methods[] {
@@ -171,10 +206,11 @@ static JNINativeMethod const methods[] {
     {"getProperty", "(Ljava/lang/String;)Ljava/lang/String;", (void*)getProperty_RimeApi},
     
     {"deploySchema", "(Ljava/lang/String;)Z", (void*)deploySchema_RimeApi},
-    {"getSchemaList", "()[Licu/astronot233/rime/RimeSchemaInfo;", (void*)getSchemaList_RimeApi},
+    {"getSchemata", "()[Licu/astronot233/rime/RimeSchema;", (void*)getSchemata_RimeApi},
     {"getCurrentSchemaId", "()Ljava/lang/String;", (void*)getCurrentSchemaId_RimeApi},
     {"selectSchema", "(Ljava/lang/String;)Z", (void*)selectSchema_RimeApi},
     
+    {"getCandidates", "()[Licu/astronot233/rime/RimeCandidate;", (void*)getCandidates_RimeApi},
     {"selectCandidate", "(I)Z", (void*)selectCandidate_RimeApi},
     {"deleteCandidate", "(I)Z", (void*)deleteCandidate_RimeApi},
     {"highlightCandidate", "(I)Z", (void*)highlightCandidate_RimeApi},
@@ -182,9 +218,8 @@ static JNINativeMethod const methods[] {
     
     {"deployConfigFile", "(Ljava/lang/String;Ljava/lang/String;)Z", (void*)deployConfigFile_RimeApi},
     
-    {"getCommitProtoJson", "()Ljava/lang/String;", (void*)getCommitProtoJson_RimeApi},
-    {"getContextProtoJson", "()Ljava/lang/String;", (void*)getContextProtoJson_RimeApi},
-    {"getStatusProtoJson", "()Ljava/lang/String;", (void*)getStatusProtoJson_RimeApi},
+    {"getCommit", "()Ljava/lang/String;", (void*)getCommit_RimeApi},
+    {"getPreedit", "()Ljava/lang/String;", (void*)getPreedit_RimeApi}
 };
 
 bool registerNativeMethods(JNIEnv * env) {
