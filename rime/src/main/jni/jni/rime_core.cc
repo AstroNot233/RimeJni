@@ -110,8 +110,8 @@ namespace rime::jni {
         rimeCandidateList.reserve(MAX_CANDIDATE_COUNT);
         for (size_t i { 0U }; i < MAX_CANDIDATE_COUNT && rime->candidate_list_next(&iter); ++i)
             rimeCandidateList.emplace_back(JRimeCandidate {
-                iter.candidate.text,
-                iter.candidate.comment
+                iter.candidate.text ?: "",
+                iter.candidate.comment ?: ""
         });
         rime->candidate_list_end(&iter);
         return rimeCandidateList;
@@ -148,10 +148,14 @@ namespace rime::jni {
             LOGE("Session(0x%lX) is dead", s);
             throw std::runtime_error("Session is dead");
         }
+        string commit { session->commit_text() };
+        session->ResetCommitText();
+
         #ifdef DEBUG_PRINT_PROTO
-        LOGD("{ \"Commit\": \"%s\", }", session->commit_text().c_str());
+        LOGD("{ \"Commit\": \"%s\", }", commit.c_str());
         #endif // DEBUG_PRINT_PROTO
-        return session->commit_text();
+
+        return commit;
     }
     string JRimeCore::getPreedit() {
         LOGV("getPreedit()");
@@ -170,6 +174,7 @@ namespace rime::jni {
             LOGV("Session(0x%lX) is not composing", s);
             return "";
         }
+
         #ifdef DEBUG_PRINT_PROTO
         LOGD("{ \"Preedit\": \"%s\", }", ctx->GetPreedit().text.c_str());
         #endif // DEBUG_PRINT_PROTO
@@ -203,16 +208,22 @@ namespace rime::jni {
 
 // Private:
     RimeSessionId JRimeCore::getSession() {
+        if (session) {
+            if (!rime->find_session(session->id())) {
+                LOGE("Session(0x%lX) is dead", session->id());
+                session = nullptr;
+            }
+        }
         if (!session) {
             try {
                 session = std::make_shared<SessionTracker>(rime);
             } catch (std::runtime_error const & e) {
                 session = nullptr;
-                LOGV("getSession() Failed: %s", e.what());
-                return {};
+                LOGE("getSession() Failed: %s", e.what());
+                return 0UL;
             }
         }
-        LOGV("getSession() = 0x%lX", session->id());
+        LOGV("getSession() -> 0x%lX", session->id());
         return session->id();
     }
 

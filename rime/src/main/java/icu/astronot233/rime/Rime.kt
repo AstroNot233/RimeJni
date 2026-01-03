@@ -1,8 +1,12 @@
 package icu.astronot233.rime
 
+import android.view.KeyEvent
+import android.util.Log
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import icu.astronot233.rime.SyncStage
 import icu.astronot233.rime.RimeApi
 
@@ -18,8 +22,12 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
         extraBufferCapacity = 16,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
+    private val pedFlow = MutableStateFlow(String())
+    private val cddFlow = MutableStateFlow(emptyList<RimeCandidate>())
 
     val messageFlow = msgFlow.asSharedFlow()
+    val preeditFlow = pedFlow.asStateFlow()
+    val candidatesFlow = cddFlow.asStateFlow()
 
     // Lifecycle
     fun startup(fullCheck: Boolean = false): Boolean {
@@ -53,19 +61,39 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
     }
 
     // IO behavior
-    suspend fun processKey(keyCode: Int, mask: Int = 0): Boolean = dispatcher.execute {
-        if (RimeApi.processKey(keyCode, mask)) {
-            if (RimeApi.getCommit().isNotEmpty())
-                msgFlow.emit(RimeMessage.Commit(RimeApi.getCommit()))
+    suspend fun processX11Code(x11Code: Int, mask: Int = 0): Boolean = dispatcher.execute {
+        Log.d("Rime", "processX11Code: ($x11Code, $mask)")
+        if (RimeApi.processKey(x11Code, mask)) {
+            val commit = RimeApi.getCommit()
+            val preedit = RimeApi.getPreedit()
+            val candidates = RimeApi.getCandidates()
+            if (commit.isNotEmpty())
+                msgFlow.emit(RimeMessage.Commit(commit))
+            pedFlow.value = preedit
+            cddFlow.value = candidates
             true
         } else {
+            msgFlow.emit(RimeMessage.Passby(Pair(x11Code, mask)))
             false
         }
     }
+    suspend fun processCodePoint(codePoint: Int, mask: Int = 0): Boolean {
+        val x11Code = KeyMapper.toX11Key(codePoint)
+        return processX11Code(x11Code, mask)
+    }
+    suspend fun processKeyEvent(keyEvent: KeyEvent): Boolean {
+        val (x11Code, mask) = KeyMapper.toRimeStyled(keyEvent)
+        return processX11Code(x11Code, mask)
+    }
     suspend fun simulateKeySequence(sequence: String): Boolean = dispatcher.execute {
         if (RimeApi.simulateKeySequence(sequence)) {
-            if (RimeApi.getCommit().isNotEmpty())
+            val commit = RimeApi.getCommit()
+            val preedit = RimeApi.getPreedit()
+            val candidates = RimeApi.getCandidates()
+            if (commit.isNotEmpty())
                 msgFlow.emit(RimeMessage.Commit(RimeApi.getCommit()))
+            pedFlow.value = preedit
+            cddFlow.value = candidates
             true
         } else {
             false
@@ -73,7 +101,12 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
     }
     suspend fun commitComposition(): Boolean = dispatcher.execute {
         if (RimeApi.commitComposition()) {
-            msgFlow.emit(RimeMessage.Commit(RimeApi.getCommit()))
+            val commit = RimeApi.getCommit()
+            val preedit = RimeApi.getPreedit()
+            val candidates = RimeApi.getCandidates()
+            msgFlow.emit(RimeMessage.Commit(commit))
+            pedFlow.value = preedit
+            cddFlow.value = candidates
             true
         } else {
             false
@@ -81,6 +114,8 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
     }
     suspend fun clearComposition() = dispatcher.execute {
         RimeApi.clearComposition()
+        pedFlow.value = RimeApi.getPreedit()
+        cddFlow.value = RimeApi.getCandidates()
     }
 
     // Option
@@ -108,7 +143,7 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
             false
         }
     }
-    suspend fun getSchemata(): Array<RimeSchema> = dispatcher.execute {
+    suspend fun getSchemata(): List<RimeSchema> = dispatcher.execute {
         RimeApi.getSchemata()
     }
     suspend fun getCurrentSchemaId(): String = dispatcher.execute {
@@ -119,14 +154,40 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
     }
 
     // Candidate and page
+    suspend fun getCandidates(): List<RimeCandidate> = dispatcher.execute {
+        RimeApi.getCandidates()
+    }
     suspend fun selectCandidate(index: Int): Boolean = dispatcher.execute {
-        RimeApi.selectCandidate(index)
+        if (RimeApi.selectCandidate(index)) {
+            val commit = RimeApi.getCommit()
+            val preedit = RimeApi.getPreedit()
+            val candidates = RimeApi.getCandidates()
+            if (commit.isNotEmpty())
+                msgFlow.emit(RimeMessage.Commit(commit))
+            pedFlow.value = preedit
+            cddFlow.value = candidates
+            true
+        } else {
+            false
+        }
     }
     suspend fun deleteCandidate(index: Int): Boolean = dispatcher.execute {
-        RimeApi.deleteCandidate(index)
+        if (RimeApi.deleteCandidate(index)) {
+            val candidates = RimeApi.getCandidates()
+            cddFlow.value = candidates
+            true
+        } else {
+            false
+        }
     }
     suspend fun highlightCandidate(index: Int): Boolean = dispatcher.execute {
-        RimeApi.highlightCandidate(index)
+        if (RimeApi.highlightCandidate(index)) {
+            val candidates = RimeApi.getCandidates()
+            cddFlow.value = candidates
+            true
+        } else {
+            false
+        }
     }
     suspend fun changePage(backward: Boolean): Boolean = dispatcher.execute {
         RimeApi.changePage(backward)
@@ -145,7 +206,11 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
     }
 
     // Query
-    suspend fun getCommit(): String = dispatcher.execute { RimeApi.getCommit() }
-    suspend fun getPreedit(): String = dispatcher.execute { RimeApi.getPreedit() }
+    suspend fun getCommit(): String = dispatcher.execute {
+        RimeApi.getCommit()
+    }
+    suspend fun getPreedit(): String = dispatcher.execute {
+        RimeApi.getPreedit()
+    }
 
 }

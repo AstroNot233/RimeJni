@@ -19,7 +19,7 @@ object RimeApi {
     @JvmStatic external fun syncUserData(): Boolean
     // IO behavior
     @JvmStatic private external fun processKeyImpl(keyCode: Int, mask: Int): Boolean
-    @JvmStatic fun processKey(keyCode: Int, mask: Int = 0): Boolean = processKeyImpl(keyCode, mask)
+    @JvmStatic fun processKey(keyCode: Int, mask: Int = 0) = processKeyImpl(keyCode, mask)
     @JvmStatic external fun simulateKeySequence(sequence: String): Boolean
     @JvmStatic external fun commitComposition(): Boolean
     @JvmStatic external fun clearComposition()
@@ -30,11 +30,13 @@ object RimeApi {
     @JvmStatic external fun getProperty(property: String): String
     // Schema
     @JvmStatic external fun deploySchema(schemaFile: String): Boolean
-    @JvmStatic external fun getSchemata(): Array<RimeSchema>
+    @JvmStatic external fun getSchemataImpl(): Array<RimeSchema>
+    @JvmStatic fun getSchemata() = getSchemataImpl().toList()
     @JvmStatic external fun getCurrentSchemaId(): String
     @JvmStatic external fun selectSchema(schemaId: String): Boolean
     // Candidate and page
-    @JvmStatic external fun getCandidates(): Array<RimeCandidate>
+    @JvmStatic external fun getCandidatesImpl(): Array<RimeCandidate>
+    @JvmStatic fun getCandidates() = getCandidatesImpl().toList()
     @JvmStatic external fun selectCandidate(index: Int): Boolean
     @JvmStatic external fun deleteCandidate(index: Int): Boolean
     @JvmStatic external fun highlightCandidate(index: Int): Boolean

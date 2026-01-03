@@ -1,7 +1,7 @@
 package icu.astronot233.rime
 
 enum class MessageType(val value: Int) {
-    Unknown(-1), Deploy(1), Sync(2), Commit(3),
+    Unknown(-1), Deploy(1), Sync(2), Commit(3), Passby(4),
     // For debugging only
     KeyEvent(-2),
 }
@@ -11,7 +11,7 @@ enum class DeployStage(val value: Int) {
 }
 
 enum class SyncStage(val value: Int) {
-    Unknown(-1), Standby(0), Startup(1), Success(2)
+    Unknown(-1), Standby(0), Startup(1), Success(2),
 }
 
 sealed class RimeMessage() {
@@ -29,6 +29,9 @@ sealed class RimeMessage() {
     }
     data class Commit(val value: String): RimeMessage() {
         override val type: MessageType = MessageType.Commit
+    }
+    data class Passby(val value: Pair<Int, Int>): RimeMessage() {
+        override val type: MessageType = MessageType.Passby
     }
 
 }

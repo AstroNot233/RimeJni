@@ -4,15 +4,9 @@ import android.content.Context
 import java.io.File
 
 object DefaultDeployer {
-    fun deploy(context: Context): Boolean {
+    fun deploy(context: Context) {
         val rimeDir = context.getExternalFilesDir("rime")!!
         copyAssetsToDir(context, "shared", File(rimeDir, "shared"))
-        
-        return RimeApi.initialize(
-            sharedDataDir = File(rimeDir, "shared").absolutePath,
-            userDataDir = File(rimeDir, "user").absolutePath,
-            appName = context.packageName
-        ) && RimeApi.startup()
     }
     private fun copyAssetsToDir(context: Context, assetPath: String, targetDir: File) {
         targetDir.mkdirs()
