@@ -1,25 +1,16 @@
-#include "rime_jni.hpp"
-#include <jni.h>
+#include "jni_utils.hh"
+#include "rime_core.hh"
+#include "rime_structs.hh"
 
 extern void rime_require_module_lua();
 extern void rime_require_module_predict();
 
 using namespace rime::jni;
-
-std::string stringJavaToCxx(JNIEnv * env, jstring jstr) {
-    if (!jstr) return {};
-    char const * chars { env->GetStringUTFChars(jstr, nullptr) };
-    std::string str { chars };
-    env->ReleaseStringUTFChars(jstr, chars);
-    return str;
-}
-jstring stringCxxToJava(JNIEnv * env, std::string const & str) {
-    return env->NewStringUTF(str.c_str());
-}
+using std::string, std::vector;
 
 static std::unique_ptr<JRimeCore> instance { nullptr };
-bool createInstance(std::string const & sharedDir, std::string const & userDir, std::string const & appName) {
-    static std::string cachedSharedDir, cachedUserDir, cachedAppName;
+bool createInstance(string const & sharedDir, string const & userDir, string const & appName) {
+    static string cachedSharedDir, cachedUserDir, cachedAppName;
     if (instance)
         return (sharedDir == cachedSharedDir && userDir == cachedUserDir && appName == cachedAppName);
     cachedSharedDir = sharedDir;
@@ -37,12 +28,12 @@ JRimeCore * getInstance() {
 // Lifecycle
 static jboolean initialize_RimeApi(JNIEnv* env, jclass /*class*/,
     jstring sharedDataDir, jstring userDataDir, jstring appName) {
-    std::string sD { stringJavaToCxx(env, sharedDataDir) };
-    std::string uD { stringJavaToCxx(env, userDataDir) };
-    std::string aN { stringJavaToCxx(env, appName) };
+    string sD { stringJavaToCxx(env, sharedDataDir) };
+    string uD { stringJavaToCxx(env, userDataDir) };
+    string aN { stringJavaToCxx(env, appName) };
     return createInstance(sD, uD, aN) ? JNI_TRUE : JNI_FALSE;
 }
-static jboolean startup_RimeApi_bool(JNIEnv * /*env*/, jclass /*class*/, jboolean fullCheck) {
+static jboolean startup_RimeApi_bool(JNIEnv* /*env*/, jclass /*class*/, jboolean fullCheck) {
     return getInstance()->startup(fullCheck);
 }
 static void shutdown_RimeApi(JNIEnv* /*env*/, jclass /*class*/) {
@@ -57,7 +48,7 @@ static jboolean processKey_RimeApi_int_int(JNIEnv* /*env*/, jclass /*class*/, ji
     return getInstance()->processKey(keyCode, mask);
 }
 static jboolean simulateKeySequence_RimeApi(JNIEnv* env, jclass /*class*/, jstring sequence) {
-    std::string s { stringJavaToCxx(env, sequence) };
+    string s { stringJavaToCxx(env, sequence) };
     return getInstance()->simulateKeySequence(s);
 }
 static jboolean commitComposition_RimeApi(JNIEnv* /*env*/, jclass /*class*/) {
@@ -69,27 +60,27 @@ static void clearComposition_RimeApi(JNIEnv* /*env*/, jclass /*class*/) {
 
 // Option
 static void setOption_RimeApi(JNIEnv* env, jclass /*class*/, jstring option, jboolean value) {
-    std::string o { stringJavaToCxx(env, option) };
+    string o { stringJavaToCxx(env, option) };
     return getInstance()->setOption(o, value);
 }
 static jboolean getOption_RimeApi(JNIEnv* env, jclass /*class*/, jstring option) {
-    std::string o { stringJavaToCxx(env, option) };
+    string o { stringJavaToCxx(env, option) };
     return getInstance()->getOption(o);
 }
 static void setProperty_RimeApi(JNIEnv* env, jclass /*class*/, jstring property, jstring value) {
-    std::string p { stringJavaToCxx(env, property) };
-    std::string v { stringJavaToCxx(env, value) };
+    string p { stringJavaToCxx(env, property) };
+    string v { stringJavaToCxx(env, value) };
     return getInstance()->setProperty(p, v);
 }
 static jstring getProperty_RimeApi(JNIEnv* env, jclass /*class*/, jstring property) {
-    std::string p { stringJavaToCxx(env, property) };
-    std::string v { getInstance()->getProperty(p) };
+    string p { stringJavaToCxx(env, property) };
+    string v { getInstance()->getProperty(p) };
     return stringCxxToJava(env, v);
 }
 
 // Schema
 static jboolean deploySchema_RimeApi(JNIEnv* env, jclass /*class*/, jstring schemaFile) {
-    std::string sF { stringJavaToCxx(env, schemaFile) };
+    string sF { stringJavaToCxx(env, schemaFile) };
     return getInstance()->deploySchema(sF);
 }
 static jobjectArray getSchemata_RimeApi(JNIEnv* env, jclass /*class*/) {
@@ -103,7 +94,7 @@ static jobjectArray getSchemata_RimeApi(JNIEnv* env, jclass /*class*/) {
     ) };
     if (!factoryMethod)
         throw std::runtime_error("RimeSchema.create method not found");
-    std::vector<JRimeSchema> sL { getInstance()->getSchemata() };
+    vector<JRimeSchema> sL { getInstance()->getSchemata() };
     jobjectArray result { env->NewObjectArray( sL.size(), className, nullptr) };
     if (!result)
         throw std::runtime_error("Failed to create schema list");
@@ -122,11 +113,11 @@ static jobjectArray getSchemata_RimeApi(JNIEnv* env, jclass /*class*/) {
     return result;
 }
 static jstring getCurrentSchemaId_RimeApi(JNIEnv* env, jclass /*class*/) {
-    std::string sI { getInstance()->getCurrentSchemaId() };
+    string sI { getInstance()->getCurrentSchemaId() };
     return stringCxxToJava(env, sI);
 }
 static jboolean selectSchema_RimeApi(JNIEnv* env, jclass /*class*/, jstring schemaId) {
-    std::string sI { stringJavaToCxx(env, schemaId) };
+    string sI { stringJavaToCxx(env, schemaId) };
     return getInstance()->selectSchema(sI);
 }
 
@@ -142,7 +133,7 @@ static jobjectArray getCandidates_RimeApi(JNIEnv* env, jclass /*class*/) {
     ) };
     if (!factoryMethod)
         throw std::runtime_error("RimeCandidate.create method not found");
-    std::vector<JRimeCandidate> cL { getInstance()->getCandidates() };
+    vector<JRimeCandidate> cL { getInstance()->getCandidates() };
     jobjectArray result { env->NewObjectArray( cL.size(), className, nullptr) };
     if (!result)
         throw std::runtime_error("Failed to create candidate list");
@@ -175,8 +166,8 @@ static jboolean changePage_RimeApi(JNIEnv* /*env*/, jclass /*class*/, jboolean b
 
 // Config
 static jboolean deployConfigFile_RimeApi(JNIEnv* env, jclass /*class*/, jstring fileName, jstring versionKey) {
-    std::string fN { stringJavaToCxx(env, fileName) };
-    std::string vK { stringJavaToCxx(env, versionKey) };
+    string fN { stringJavaToCxx(env, fileName) };
+    string vK { stringJavaToCxx(env, versionKey) };
     return getInstance()->deployConfigFile(fN, vK);
 }
 
@@ -206,11 +197,11 @@ static JNINativeMethod const methods[] {
     {"getProperty", "(Ljava/lang/String;)Ljava/lang/String;", (void*)getProperty_RimeApi},
     
     {"deploySchema", "(Ljava/lang/String;)Z", (void*)deploySchema_RimeApi},
-    {"getSchemata", "()[Licu/astronot233/rime/RimeSchema;", (void*)getSchemata_RimeApi},
+    {"getSchemataImpl", "()[Licu/astronot233/rime/RimeSchema;", (void*)getSchemata_RimeApi},
     {"getCurrentSchemaId", "()Ljava/lang/String;", (void*)getCurrentSchemaId_RimeApi},
     {"selectSchema", "(Ljava/lang/String;)Z", (void*)selectSchema_RimeApi},
     
-    {"getCandidates", "()[Licu/astronot233/rime/RimeCandidate;", (void*)getCandidates_RimeApi},
+    {"getCandidatesImpl", "()[Licu/astronot233/rime/RimeCandidate;", (void*)getCandidates_RimeApi},
     {"selectCandidate", "(I)Z", (void*)selectCandidate_RimeApi},
     {"deleteCandidate", "(I)Z", (void*)deleteCandidate_RimeApi},
     {"highlightCandidate", "(I)Z", (void*)highlightCandidate_RimeApi},
@@ -222,7 +213,7 @@ static JNINativeMethod const methods[] {
     {"getPreedit", "()Ljava/lang/String;", (void*)getPreedit_RimeApi}
 };
 
-bool registerNativeMethods(JNIEnv * env) {
+bool registerNativeMethods(JNIEnv* env) {
     jclass className { env->FindClass("icu/astronot233/rime/RimeApi") };
     if (!className)
         return false;
@@ -234,7 +225,7 @@ bool registerNativeMethods(JNIEnv * env) {
 
 extern "C" {
 
-    JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM * vm, void * /*reserved*/) {
+    JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* /*reserved*/) {
         rime_require_module_lua();
         rime_require_module_predict();
 

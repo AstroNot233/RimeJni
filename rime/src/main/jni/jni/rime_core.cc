@@ -1,10 +1,13 @@
-#include "rime_jni.hpp"
+#include "rime_core.hh"
+#include "debug/logger.hh"
 
 #include <librime/rime/service.h>
 #include <librime/rime/context.h>
+#include "rime_session.hh"
 
 namespace rime::jni {
-// class JRimeCore
+
+    using std::string, std::vector;
 
 // Lifecycle
     Bool JRimeCore::startup(Bool fullCheck) {
@@ -26,7 +29,7 @@ namespace rime::jni {
         LOGV("processKey(keyCode = %d, mask = %d)", keyCode, mask);
         return rime->process_key(getSession(), keyCode, mask);
     }
-    Bool JRimeCore::simulateKeySequence(std::string const & sequence) {
+    Bool JRimeCore::simulateKeySequence(string const & sequence) {
         LOGV("simulateKeySequence(sequence = %s)", sequence.c_str());
         return rime->simulate_key_sequence(getSession(), sequence.c_str());
     }
@@ -40,19 +43,19 @@ namespace rime::jni {
     }
 
 // Option
-    void JRimeCore::setOption(std::string const & option, Bool value) {
+    void JRimeCore::setOption(string const & option, Bool value) {
         LOGV("setOption(option = %s, value = %d)", option.c_str(), value);
         return rime->set_option(getSession(), option.c_str(), value);
     }
-    Bool JRimeCore::getOption(std::string const & option) {
+    Bool JRimeCore::getOption(string const & option) {
         LOGV("getOption(option = %s)", option.c_str());
         return rime->get_option(getSession(), option.c_str());
     }
-    void JRimeCore::setProperty(std::string const & property, std::string const & value) {
+    void JRimeCore::setProperty(string const & property, string const & value) {
         LOGV("setProperty(property = %s, value = %s)", property.c_str(), value.c_str());
         return rime->set_property(getSession(), property.c_str(), value.c_str());
     }
-    std::string JRimeCore::getProperty(std::string const & property) {
+    string JRimeCore::getProperty(string const & property) {
         LOGV("getProperty(property = %s)", property.c_str());
         char value[MAX_BUFFER_LENGTH];
         if (rime->get_property(getSession(), property.c_str(), value, MAX_BUFFER_LENGTH)) {
@@ -63,16 +66,16 @@ namespace rime::jni {
     }
 
 // Schema
-    Bool JRimeCore::deploySchema(std::string const & schemaFile) {
+    Bool JRimeCore::deploySchema(string const & schemaFile) {
         LOGV("deploySchema(schemaFile = %s)", schemaFile.c_str());
         return rime->deploy_schema(schemaFile.c_str());
     }
-    std::vector<JRimeSchema> JRimeCore::getSchemata() {
+    vector<JRimeSchema> JRimeCore::getSchemata() {
         LOGV("getSchemata()");
         RimeSchemaList list {};
         if (!rime->get_schema_list(&list))
-            return std::vector<JRimeSchema>(0);
-        std::vector<JRimeSchema> rimeSchemaList {};
+            return vector<JRimeSchema>(0);
+        vector<JRimeSchema> rimeSchemaList {};
         rimeSchemaList.reserve(list.size);
         for (size_t i { 0U }; i < list.size; ++i) {
             rimeSchemaList.emplace_back(JRimeSchema {
@@ -83,7 +86,7 @@ namespace rime::jni {
         rime->free_schema_list(&list);
         return rimeSchemaList;
     }
-    std::string JRimeCore::getCurrentSchemaId() {
+    string JRimeCore::getCurrentSchemaId() {
         LOGV("getCurrentSchemaId()");
         char currentSchemaId[MAX_BUFFER_LENGTH];
         if (rime->get_current_schema(getSession(), currentSchemaId, MAX_BUFFER_LENGTH)) {
@@ -92,18 +95,18 @@ namespace rime::jni {
             return "";
         }
     }
-    Bool JRimeCore::selectSchema(std::string const & schemaId) {
+    Bool JRimeCore::selectSchema(string const & schemaId) {
         LOGV("selectSchema(schemaId = %s)", schemaId.c_str());
         return rime->select_schema(getSession(), schemaId.c_str());
     }
 
 // Candidate and page
-    std::vector<JRimeCandidate> JRimeCore::getCandidates() {
+    vector<JRimeCandidate> JRimeCore::getCandidates() {
         LOGV("getCandidates()");
         RimeCandidateListIterator iter {};
         if (!rime->candidate_list_from_index(getSession(), &iter, 0))
-            return std::vector<JRimeCandidate>(0);
-        std::vector<JRimeCandidate> rimeCandidateList {};
+            return vector<JRimeCandidate>(0);
+        vector<JRimeCandidate> rimeCandidateList {};
         rimeCandidateList.reserve(MAX_CANDIDATE_COUNT);
         for (size_t i { 0U }; i < MAX_CANDIDATE_COUNT && rime->candidate_list_next(&iter); ++i)
             rimeCandidateList.emplace_back(JRimeCandidate {
@@ -131,13 +134,13 @@ namespace rime::jni {
     }
 
 // Config
-    Bool JRimeCore::deployConfigFile(std::string const & fileName, std::string const & versionKey) {
+    Bool JRimeCore::deployConfigFile(string const & fileName, string const & versionKey) {
         LOGV("deployConfigFile(fileName = %s, versionKey = %s)", fileName.c_str(), versionKey.c_str());
         return rime->deploy_config_file(fileName.c_str(), versionKey.c_str());
     }
 
 // Query
-    std::string JRimeCore::getCommit() {
+    string JRimeCore::getCommit() {
         LOGV("getCommit()");
         SessionId const s { getSession() };
         auto session { Service::instance().GetSession(s) };
@@ -150,7 +153,7 @@ namespace rime::jni {
         #endif // DEBUG_PRINT_PROTO
         return session->commit_text();
     }
-    std::string JRimeCore::getPreedit() {
+    string JRimeCore::getPreedit() {
         LOGV("getPreedit()");
         SessionId const s { getSession() };
         auto session { Service::instance().GetSession(s) };
@@ -163,8 +166,10 @@ namespace rime::jni {
             LOGE("Session(0x%lX) has no context", s);
             throw std::runtime_error("Session has no context");
         }
-        if (!ctx->IsComposing())
+        if (!ctx->IsComposing()) {
+            LOGV("Session(0x%lX) is not composing", s);
             return "";
+        }
         #ifdef DEBUG_PRINT_PROTO
         LOGD("{ \"Preedit\": \"%s\", }", ctx->GetPreedit().text.c_str());
         #endif // DEBUG_PRINT_PROTO
@@ -173,9 +178,9 @@ namespace rime::jni {
     }
 
     JRimeCore::JRimeCore(
-        std::string const & sharedDataDir,
-        std::string const & userDataDir,
-        std::string const & appName
+        string const & sharedDataDir,
+        string const & userDataDir,
+        string const & appName
     ) : sharedDataDir { sharedDataDir }, userDataDir { userDataDir }, appName { appName } {
         LOGV(
             "Ctor(\n\tsharedDataDir = %s,\n\tuserDataDir = %s,\n\tappName = %s\n)",
@@ -197,15 +202,18 @@ namespace rime::jni {
     JRimeCore::~JRimeCore() { LOGV("Dtor()"); }
 
 // Private:
-    RimeSessionId JRimeCore::getSession(bool newSession) {
-        if (newSession && session) {
-            rime->destroy_session(session);
-            session = 0UL;
+    RimeSessionId JRimeCore::getSession() {
+        if (!session) {
+            try {
+                session = std::make_shared<SessionTracker>(rime);
+            } catch (std::runtime_error const & e) {
+                session = nullptr;
+                LOGV("getSession() Failed: %s", e.what());
+                return {};
+            }
         }
-        if (!session)
-            session = rime->create_session();
-        LOGV("getSession(newSession = %d) = 0x%lX", newSession, session);
-        return session;
+        LOGV("getSession() = 0x%lX", session->id());
+        return session->id();
     }
 
 }

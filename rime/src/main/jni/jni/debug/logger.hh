@@ -1,5 +1,5 @@
-#ifndef LOGGER_HPP
-#define LOGGER_HPP
+#ifndef LOGGER_HH
+#define LOGGER_HH
 
 #include <android/log.h>
 
@@ -27,4 +27,4 @@
 
 #endif // DEBUG
 
-#endif // LOGGER_HPP
+#endif // LOGGER_HH

@@ -4,16 +4,7 @@ set(JNI_LIB_NAME "rime-jni")
 
 file(GLOB_RECURSE JNI_SOURCES
     ${JNI_SOURCE_DIR}/*.cc
-    ${JNI_SOURCE_DIR}/*.cpp
-    ${JNI_SOURCE_DIR}/*.hpp
-    ${JNI_SOURCE_DIR}/*.c
-    ${JNI_SOURCE_DIR}/*.h
-    ${JNI_SOURCE_DIR}/proto/*.cc
-    ${JNI_SOURCE_DIR}/proto/*.cpp
-    ${JNI_SOURCE_DIR}/proto/*.c++
-    ${JNI_SOURCE_DIR}/proto/*.hpp
-    ${JNI_SOURCE_DIR}/proto/*.c
-    ${JNI_SOURCE_DIR}/proto/*.h
+    ${JNI_SOURCE_DIR}/*.hh
 )
 
 add_library(${JNI_LIB_NAME} SHARED
