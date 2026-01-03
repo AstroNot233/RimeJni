@@ -145,7 +145,7 @@ namespace rime::jni {
         SessionId const s { getSession() };
         auto session { Service::instance().GetSession(s) };
         if (!session) {
-            LOGE("Session(0x%lX) is dead", s);
+            LOGE("Session(0x%lX) is dead", static_cast<unsigned long>(s));
             throw std::runtime_error("Session is dead");
         }
         string commit { session->commit_text() };
@@ -162,16 +162,16 @@ namespace rime::jni {
         SessionId const s { getSession() };
         auto session { Service::instance().GetSession(s) };
         if (!session) {
-            LOGE("Session(0x%lX) is dead", s);
+            LOGE("Session(0x%lX) is dead", static_cast<unsigned long>(s));
             throw std::runtime_error("Session is dead");
         }
         Context * const ctx { session->context() };
         if (!ctx) {
-            LOGE("Session(0x%lX) has no context", s);
+            LOGE("Session(0x%lX) has no context", static_cast<unsigned long>(s));
             throw std::runtime_error("Session has no context");
         }
         if (!ctx->IsComposing()) {
-            LOGV("Session(0x%lX) is not composing", s);
+            LOGV("Session(0x%lX) is not composing", static_cast<unsigned long>(s));
             return "";
         }
 
@@ -208,12 +208,12 @@ namespace rime::jni {
 
 // Private:
     RimeSessionId JRimeCore::getSession() {
-        if (session) {
-            if (!rime->find_session(session->id())) {
-                LOGE("Session(0x%lX) is dead", session->id());
-                session = nullptr;
-            }
-        }
+        // if (session) {
+        //     if (!rime->find_session(session->id())) {
+        //         LOGE("Session(0x%lX) is dead", static_cast<unsigned long>(session->id()));
+        //         session = nullptr;
+        //     }
+        // }
         if (!session) {
             try {
                 session = std::make_shared<SessionTracker>(rime);

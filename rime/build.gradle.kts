@@ -5,17 +5,10 @@ plugins {
 
 android {
     namespace = "icu.astronot233.rime"
-    compileSdk = 36
-    
+    compileSdk = libs.versions.compileSdk.get().toInt()
+
     defaultConfig {
-        minSdk = 24
-        
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-        
-        ndk {
-            abiFilters.add("arm64-v8a")
-        }
+        minSdk = libs.versions.minSdk.get().toInt()
         
         externalNativeBuild {
             cmake {
@@ -56,13 +49,12 @@ android {
             path = file("src/main/jni/CMakeLists.txt")
         }
     }
+
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.androidx.annotation)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
 }

@@ -1,0 +1,10 @@
+# NOTICE
+
+See licenses/Boost-LICENSE.txt
+See licenses/LevelDB-LICENSE.txt
+See licenses/Librime-LICENSE.txt
+See licenses/Librime-lua-LICENSE.txt
+See licenses/Librime-predict-LICENSE.txt  
+See licenses/Marisa-trie-LICENSE.txt
+See licenses/OpenCC-LICENSE.txt
+See licenses/Yaml-cpp-LICENSE.txt
