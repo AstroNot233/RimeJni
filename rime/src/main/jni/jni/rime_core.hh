@@ -10,14 +10,19 @@
 
 namespace rime::jni {
 
+    static char const * modules[] =      { "lua", "predict" };
+    static char distribution_name[]      { "Rime for Android" };
+    static char distribution_code_name[] { "Android" };
+    static char distribution_version[]   { RIME_VERSION };
+
     class JRimeCore {
 
     private:
         RimeApi * const rime { rime_get_api() };
-        std::shared_ptr<SessionTracker> session {};
         std::string const sharedDataDir;
         std::string const userDataDir;
         std::string const appName;
+        RimeTraits traits {};
 
     public:
         JRimeCore(
@@ -47,7 +52,7 @@ namespace rime::jni {
     // Schema
         Bool deploySchema(std::string const & schemaFile);
         std::vector<JRimeSchema> getSchemata();
-        std::string getCurrentSchemaId();
+        JRimeSchema getCurrentSchema();
         Bool selectSchema(std::string const & schemaId);
 
     // Candidate and page
@@ -61,11 +66,12 @@ namespace rime::jni {
         Bool deployConfigFile(std::string const & fileName, std::string const & versionKey);
 
     // Query
+        int getStatus();
         std::string getCommit();
         std::string getPreedit();
 
     private:
-        RimeSessionId getSession();
+        RimeSessionId getSessionId();
 
     };
 

@@ -24,10 +24,12 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
     )
     private val pedFlow = MutableStateFlow(String())
     private val cddFlow = MutableStateFlow(emptyList<RimeCandidate>())
-
+    private val sttFlow = MutableStateFlow(RimeStatus(0))
+    
     val messageFlow = msgFlow.asSharedFlow()
     val preeditFlow = pedFlow.asStateFlow()
     val candidatesFlow = cddFlow.asStateFlow()
+    val statusFlow = sttFlow.asStateFlow()
 
     // Lifecycle
     fun startup(fullCheck: Boolean = false): Boolean {
@@ -146,8 +148,8 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
     suspend fun getSchemata(): List<RimeSchema> = dispatcher.execute {
         RimeApi.getSchemata()
     }
-    suspend fun getCurrentSchemaId(): String = dispatcher.execute {
-        RimeApi.getCurrentSchemaId()
+    suspend fun getCurrentSchema(): RimeSchema = dispatcher.execute {
+        RimeApi.getCurrentSchema()
     }
     suspend fun selectSchema(schema: String) = dispatcher.execute {
         RimeApi.selectSchema(schema)
@@ -206,6 +208,9 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
     }
 
     // Query
+    suspend fun getStatus(): RimeStatus = dispatcher.execute {
+        RimeApi.getStatus()
+    }
     suspend fun getCommit(): String = dispatcher.execute {
         RimeApi.getCommit()
     }

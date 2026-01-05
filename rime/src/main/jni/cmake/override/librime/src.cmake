@@ -28,8 +28,8 @@ set(rime_src
     ${rime_dict_module_src}
     ${rime_gears_src}
     ${rime_levers_src}
-    ${rime_plugins_src}
     ${rime_plugins_objs}
+    ${rime_plugins_src}
 )
 
 set(REQUIRED_TARGETS
