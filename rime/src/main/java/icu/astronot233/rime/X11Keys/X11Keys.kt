@@ -1,5 +1,7 @@
 package icu.astronot233.rime.X11Keys
 
+// Modified from <X11/keysymdef.h>
+
 const val XK_VoidSymbol = 0xffffff  /* Void symbol */
 
 const val XK_BackSpace    = 0xff08  /* Back space, back char */
