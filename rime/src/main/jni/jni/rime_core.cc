@@ -28,38 +28,62 @@ namespace rime::jni {
 // IO behavior
     Bool JRimeCore::processKey(int keyCode, int mask) {
         LOGV("processKey(keyCode = %d, mask = %d)", keyCode, mask);
-        return rime->process_key(getSessionId(), keyCode, mask);
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->process_key(sId, keyCode, mask);
     }
     Bool JRimeCore::simulateKeySequence(string const & sequence) {
         LOGV("simulateKeySequence(sequence = %s)", sequence.c_str());
-        return rime->simulate_key_sequence(getSessionId(), sequence.c_str());
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->simulate_key_sequence(sId, sequence.c_str());
     }
     Bool JRimeCore::commitComposition() {
         LOGV("commitComposition()");
-        return rime->commit_composition(getSessionId());
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->commit_composition(sId);
     }
     void JRimeCore::clearComposition() {
         LOGV("clearComposition()");
-        return rime->clear_composition(getSessionId());
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return;
+        return rime->clear_composition(sId);
     }
 
 // Option
     void JRimeCore::setOption(string const & option, Bool value) {
         LOGV("setOption(option = %s, value = %d)", option.c_str(), value);
-        return rime->set_option(getSessionId(), option.c_str(), value);
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return;
+        return rime->set_option(sId, option.c_str(), value);
     }
     Bool JRimeCore::getOption(string const & option) {
         LOGV("getOption(option = %s)", option.c_str());
-        return rime->get_option(getSessionId(), option.c_str());
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->get_option(sId, option.c_str());
     }
     void JRimeCore::setProperty(string const & property, string const & value) {
         LOGV("setProperty(property = %s, value = %s)", property.c_str(), value.c_str());
-        return rime->set_property(getSessionId(), property.c_str(), value.c_str());
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return;
+        return rime->set_property(sId, property.c_str(), value.c_str());
     }
     string JRimeCore::getProperty(string const & property) {
         LOGV("getProperty(property = %s)", property.c_str());
-        char value[MAX_BUFFER_LENGTH];
-        if (rime->get_property(getSessionId(), property.c_str(), value, MAX_BUFFER_LENGTH)) {
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return "";
+        char value[MAX_BUFFER_LENGTH] {};
+        if (rime->get_property(sId, property.c_str(), value, MAX_BUFFER_LENGTH)) {
             return value;
         } else {
             return "";
@@ -89,20 +113,29 @@ namespace rime::jni {
     }
     JRimeSchema JRimeCore::getCurrentSchema() {
         LOGV("getCurrentSchema()");
-        auto session { Service::instance().GetSession(getSessionId()) };
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return { "", "" };
+        auto session { Service::instance().GetSession(sId) };
         Schema * const schema { session->schema() };
         return { schema->schema_id(), schema->schema_name() };
     }
     Bool JRimeCore::selectSchema(string const & schemaId) {
         LOGV("selectSchema(schemaId = %s)", schemaId.c_str());
-        return rime->select_schema(getSessionId(), schemaId.c_str());
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->select_schema(sId, schemaId.c_str());
     }
 
 // Candidate and page
     vector<JRimeCandidate> JRimeCore::getCandidates() {
         LOGV("getCandidates()");
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return vector<JRimeCandidate>(0);
         RimeCandidateListIterator iter {};
-        if (!rime->candidate_list_from_index(getSessionId(), &iter, 0))
+        if (!rime->candidate_list_from_index(sId, &iter, 0))
             return vector<JRimeCandidate>(0);
         vector<JRimeCandidate> rimeCandidateList {};
         rimeCandidateList.reserve(MAX_CANDIDATE_COUNT);
@@ -116,19 +149,31 @@ namespace rime::jni {
     }
     Bool JRimeCore::selectCandidate(int index) {
         LOGV("selectCandidate(index = %d)", index);
-        return rime->select_candidate(getSessionId(), index);
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->select_candidate(sId, index);
     }
     Bool JRimeCore::deleteCandidate(int index) {
         LOGV("deleteCandidate(index = %d)", index);
-        return rime->delete_candidate(getSessionId(), index);
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->delete_candidate(sId, index);
     }
     Bool JRimeCore::highlightCandidate(int index) {
         LOGV("highlightCandidate(index = %d)", index);
-        return rime->highlight_candidate(getSessionId(), index);
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->highlight_candidate(sId, index);
     }
     Bool JRimeCore::changePage(Bool backward) {
         LOGV("changePage(backward = %d)", backward);
-        return rime->change_page(getSessionId(), backward);
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->change_page(sId, backward);
     }
 
 // Config
@@ -140,7 +185,10 @@ namespace rime::jni {
 // Query
     int JRimeCore::getStatus() {
         LOGV("getStatus()");
-        auto session { Service::instance().GetSession(getSessionId()) };
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return 0;
+        auto session { Service::instance().GetSession(sId) };
         Context * const context { session->context() };
         return
             ((Service::instance().disabled())        << 0) |
@@ -153,14 +201,20 @@ namespace rime::jni {
     }
     string JRimeCore::getCommit() {
         LOGV("getCommit()");
-        auto session { Service::instance().GetSession(getSessionId()) };
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return "";
+        auto session { Service::instance().GetSession(sId) };
         string commit { session->commit_text() };
         session->ResetCommitText();
         return commit;
     }
     string JRimeCore::getPreedit() {
         LOGV("getPreedit()");
-        auto session { Service::instance().GetSession(getSessionId()) };
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return "";
+        auto session { Service::instance().GetSession(sId) };
         Context * const context { session->context() };
         return context->GetPreedit().text;
     }
@@ -198,6 +252,8 @@ namespace rime::jni {
 // Private:
     RimeSessionId JRimeCore::getSessionId() {
         static std::shared_ptr<SessionTracker> session { nullptr };
+        if (session && !session->operator bool())
+            session = nullptr;
         if (!session) {
             try {
                 session = std::make_shared<SessionTracker>(rime);

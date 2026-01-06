@@ -93,7 +93,7 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
             val preedit = RimeApi.getPreedit()
             val candidates = RimeApi.getCandidates()
             if (commit.isNotEmpty())
-                msgFlow.emit(RimeMessage.Commit(RimeApi.getCommit()))
+                msgFlow.emit(RimeMessage.Commit(commit))
             pedFlow.value = preedit
             cddFlow.value = candidates
             true

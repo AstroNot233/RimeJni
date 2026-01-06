@@ -24,8 +24,8 @@ data class RimeCandidate(
 
 }
 
-class RimeStatus(
-    private val status: Int
+data class RimeStatus(
+    private val status: Int,
 ) {
 
     val disabled       get() = status and 0x01 != 0
@@ -35,5 +35,15 @@ class RimeStatus(
     val simplification get() = status and 0x10 != 0
     val traditional    get() = status and 0x20 != 0
     val asciiPunct     get() = status and 0x40 != 0
+
+    override fun toString(): String = """{
+        disabled = $disabled,
+        composing = $composing,
+        asciiMode = $asciiMode,
+        fullShape = $fullShape,
+        simplification = $simplification,
+        traditional = $traditional,
+        asciiPunct = $asciiPunct,
+    }""".trimIndent()
 
 }
