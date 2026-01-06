@@ -9,7 +9,16 @@ android {
 
     defaultConfig {
         minSdk = libs.versions.minSdk.get().toInt()
-        
+
+        ndk {
+            abiFilters += listOf(
+                "arm64-v8a",
+                "x86_64",
+                "armeabi-v7a",
+                "x86",
+            )
+        }
+
         externalNativeBuild {
             cmake {
                 arguments += listOf(
@@ -19,7 +28,8 @@ android {
                 cppFlags += listOf(
                     "-Wno-deprecated",
                     "-fpermissive",
-                    "-fno-char8_t"
+                    "-fno-char8_t",
+                    // "-DDEBUG",
                 )
             }
         }

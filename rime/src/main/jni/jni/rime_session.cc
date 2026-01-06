@@ -8,13 +8,13 @@ namespace rime::jni {
     SessionTracker::SessionTracker(RimeApi const * api) :
     api { api }, sId { api->create_session() } {
         LOGV("New session: 0x%lX", sId);
-        if (!sId) throw std::runtime_error("Failed to create session");
+        if (!operator bool()) throw std::runtime_error("Failed to create session");
     }
     SessionTracker::~SessionTracker() {
-        if (sId) api->destroy_session(sId);
+        if (operator bool()) api->destroy_session(sId);
     }
     RimeSessionId SessionTracker::id() const { return sId; }
     SessionTracker::operator RimeSessionId() const { return sId; }
-    SessionTracker::operator bool() const { return sId; }
+    SessionTracker::operator bool() const { return sId && api->find_session(sId); }
 
 }

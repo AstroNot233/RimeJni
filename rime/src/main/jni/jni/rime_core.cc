@@ -3,6 +3,7 @@
 
 #include <librime/rime/service.h>
 #include <librime/rime/context.h>
+#include <librime/rime/schema.h>
 #include "rime_session.hh"
 
 namespace rime::jni {
@@ -12,11 +13,11 @@ namespace rime::jni {
 // Lifecycle
     Bool JRimeCore::startup(Bool fullCheck) {
         LOGV("startup(fullCheck = %d)", fullCheck);
+        rime->initialize(&traits);
         return rime->start_maintenance(fullCheck);
     }
     void JRimeCore::shutdown() {
         LOGV("shutdown()");
-        session = 0u;
         return rime->finalize();
     }
     Bool JRimeCore::syncUserData() {
@@ -27,38 +28,62 @@ namespace rime::jni {
 // IO behavior
     Bool JRimeCore::processKey(int keyCode, int mask) {
         LOGV("processKey(keyCode = %d, mask = %d)", keyCode, mask);
-        return rime->process_key(getSession(), keyCode, mask);
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->process_key(sId, keyCode, mask);
     }
     Bool JRimeCore::simulateKeySequence(string const & sequence) {
         LOGV("simulateKeySequence(sequence = %s)", sequence.c_str());
-        return rime->simulate_key_sequence(getSession(), sequence.c_str());
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->simulate_key_sequence(sId, sequence.c_str());
     }
     Bool JRimeCore::commitComposition() {
         LOGV("commitComposition()");
-        return rime->commit_composition(getSession());
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->commit_composition(sId);
     }
     void JRimeCore::clearComposition() {
         LOGV("clearComposition()");
-        return rime->clear_composition(getSession());
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return;
+        return rime->clear_composition(sId);
     }
 
 // Option
     void JRimeCore::setOption(string const & option, Bool value) {
         LOGV("setOption(option = %s, value = %d)", option.c_str(), value);
-        return rime->set_option(getSession(), option.c_str(), value);
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return;
+        return rime->set_option(sId, option.c_str(), value);
     }
     Bool JRimeCore::getOption(string const & option) {
         LOGV("getOption(option = %s)", option.c_str());
-        return rime->get_option(getSession(), option.c_str());
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->get_option(sId, option.c_str());
     }
     void JRimeCore::setProperty(string const & property, string const & value) {
         LOGV("setProperty(property = %s, value = %s)", property.c_str(), value.c_str());
-        return rime->set_property(getSession(), property.c_str(), value.c_str());
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return;
+        return rime->set_property(sId, property.c_str(), value.c_str());
     }
     string JRimeCore::getProperty(string const & property) {
         LOGV("getProperty(property = %s)", property.c_str());
-        char value[MAX_BUFFER_LENGTH];
-        if (rime->get_property(getSession(), property.c_str(), value, MAX_BUFFER_LENGTH)) {
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return "";
+        char value[MAX_BUFFER_LENGTH] {};
+        if (rime->get_property(sId, property.c_str(), value, MAX_BUFFER_LENGTH)) {
             return value;
         } else {
             return "";
@@ -86,25 +111,31 @@ namespace rime::jni {
         rime->free_schema_list(&list);
         return rimeSchemaList;
     }
-    string JRimeCore::getCurrentSchemaId() {
-        LOGV("getCurrentSchemaId()");
-        char currentSchemaId[MAX_BUFFER_LENGTH];
-        if (rime->get_current_schema(getSession(), currentSchemaId, MAX_BUFFER_LENGTH)) {
-            return currentSchemaId;
-        } else {
-            return "";
-        }
+    JRimeSchema JRimeCore::getCurrentSchema() {
+        LOGV("getCurrentSchema()");
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return { "", "" };
+        auto session { Service::instance().GetSession(sId) };
+        Schema * const schema { session->schema() };
+        return { schema->schema_id(), schema->schema_name() };
     }
     Bool JRimeCore::selectSchema(string const & schemaId) {
         LOGV("selectSchema(schemaId = %s)", schemaId.c_str());
-        return rime->select_schema(getSession(), schemaId.c_str());
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->select_schema(sId, schemaId.c_str());
     }
 
 // Candidate and page
     vector<JRimeCandidate> JRimeCore::getCandidates() {
         LOGV("getCandidates()");
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return vector<JRimeCandidate>(0);
         RimeCandidateListIterator iter {};
-        if (!rime->candidate_list_from_index(getSession(), &iter, 0))
+        if (!rime->candidate_list_from_index(sId, &iter, 0))
             return vector<JRimeCandidate>(0);
         vector<JRimeCandidate> rimeCandidateList {};
         rimeCandidateList.reserve(MAX_CANDIDATE_COUNT);
@@ -118,19 +149,31 @@ namespace rime::jni {
     }
     Bool JRimeCore::selectCandidate(int index) {
         LOGV("selectCandidate(index = %d)", index);
-        return rime->select_candidate(getSession(), index);
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->select_candidate(sId, index);
     }
     Bool JRimeCore::deleteCandidate(int index) {
         LOGV("deleteCandidate(index = %d)", index);
-        return rime->delete_candidate(getSession(), index);
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->delete_candidate(sId, index);
     }
     Bool JRimeCore::highlightCandidate(int index) {
         LOGV("highlightCandidate(index = %d)", index);
-        return rime->highlight_candidate(getSession(), index);
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->highlight_candidate(sId, index);
     }
     Bool JRimeCore::changePage(Bool backward) {
         LOGV("changePage(backward = %d)", backward);
-        return rime->change_page(getSession(), backward);
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return False;
+        return rime->change_page(sId, backward);
     }
 
 // Config
@@ -140,90 +183,87 @@ namespace rime::jni {
     }
 
 // Query
+    int JRimeCore::getStatus() {
+        LOGV("getStatus()");
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return 0;
+        auto session { Service::instance().GetSession(sId) };
+        Context * const context { session->context() };
+        return
+            ((Service::instance().disabled())        << 0) |
+            ((context->IsComposing())                << 1) |
+            ((context->get_option("ascii_mode"))     << 2) |
+            ((context->get_option("full_shape"))     << 3) |
+            ((context->get_option("simplification")) << 4) |
+            ((context->get_option("traditional"))    << 5) |
+            ((context->get_option("ascii_punct"))    << 6) ;
+    }
     string JRimeCore::getCommit() {
         LOGV("getCommit()");
-        SessionId const s { getSession() };
-        auto session { Service::instance().GetSession(s) };
-        if (!session) {
-            LOGE("Session(0x%lX) is dead", static_cast<unsigned long>(s));
-            throw std::runtime_error("Session is dead");
-        }
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
+            return "";
+        auto session { Service::instance().GetSession(sId) };
         string commit { session->commit_text() };
         session->ResetCommitText();
-
-        #ifdef DEBUG_PRINT_PROTO
-        LOGD("{ \"Commit\": \"%s\", }", commit.c_str());
-        #endif // DEBUG_PRINT_PROTO
-
         return commit;
     }
     string JRimeCore::getPreedit() {
         LOGV("getPreedit()");
-        SessionId const s { getSession() };
-        auto session { Service::instance().GetSession(s) };
-        if (!session) {
-            LOGE("Session(0x%lX) is dead", static_cast<unsigned long>(s));
-            throw std::runtime_error("Session is dead");
-        }
-        Context * const ctx { session->context() };
-        if (!ctx) {
-            LOGE("Session(0x%lX) has no context", static_cast<unsigned long>(s));
-            throw std::runtime_error("Session has no context");
-        }
-        if (!ctx->IsComposing()) {
-            LOGV("Session(0x%lX) is not composing", static_cast<unsigned long>(s));
+        RimeSessionId sId { getSessionId() };
+        if (!sId)
             return "";
-        }
-
-        #ifdef DEBUG_PRINT_PROTO
-        LOGD("{ \"Preedit\": \"%s\", }", ctx->GetPreedit().text.c_str());
-        #endif // DEBUG_PRINT_PROTO
-
-        return ctx->GetPreedit().text;
+        auto session { Service::instance().GetSession(sId) };
+        Context * const context { session->context() };
+        return context->GetPreedit().text;
     }
 
     JRimeCore::JRimeCore(
         string const & sharedDataDir,
         string const & userDataDir,
         string const & appName
-    ) : sharedDataDir { sharedDataDir }, userDataDir { userDataDir }, appName { appName } {
-        LOGV(
+    ) : sharedDataDir { sharedDataDir }, userDataDir { userDataDir }, appName { appName },
+        traits { 
+            sizeof(rime_traits_t) - sizeof(rime_traits_t::data_size),
+            this->sharedDataDir.c_str(), this->userDataDir.c_str(),
+            distribution_name, distribution_code_name, distribution_version,
+            this->appName.c_str(),
+            nullptr,    //           modules = delete
+            0,          //     min_log_level = default -> INFO
+            "",         //           log_dir = delete
+            nullptr,    // prebuilt_data_dir = default -> ${shared_data_dir}/build
+            nullptr     //       staging_dir = default -> ${user_data_dir}/build
+        }
+    {
+        LOGI(
             "Ctor(\n\tsharedDataDir = %s,\n\tuserDataDir = %s,\n\tappName = %s\n)",
             sharedDataDir.c_str(), userDataDir.c_str(), appName.c_str()
         );
-        RIME_STRUCT(RimeTraits, traits);
-        traits.shared_data_dir        = sharedDataDir.c_str();
-        traits.user_data_dir          = userDataDir.c_str();
-        traits.log_dir                = "";
-        traits.app_name               = appName.c_str();
-        traits.distribution_name      = "Rime for Android";
-        traits.distribution_code_name = "Android";
-        traits.distribution_version   = RIME_VERSION;
         rime->setup(&traits);
-        rime->initialize(&traits);
         rime->set_notification_handler(nullptr, nullptr);
         LOGV("Ctor done");
     }
-    JRimeCore::~JRimeCore() { LOGV("Dtor()"); }
+    JRimeCore::~JRimeCore() {
+        LOGI("Dtor()");
+        LOGI("Dtor done");
+    }
 
 // Private:
-    RimeSessionId JRimeCore::getSession() {
-        // if (session) {
-        //     if (!rime->find_session(session->id())) {
-        //         LOGE("Session(0x%lX) is dead", static_cast<unsigned long>(session->id()));
-        //         session = nullptr;
-        //     }
-        // }
+    RimeSessionId JRimeCore::getSessionId() {
+        static std::shared_ptr<SessionTracker> session { nullptr };
+        if (session && !session->operator bool())
+            session = nullptr;
         if (!session) {
             try {
                 session = std::make_shared<SessionTracker>(rime);
             } catch (std::runtime_error const & e) {
                 session = nullptr;
-                LOGE("getSession() Failed: %s", e.what());
+                LOGE("getSessionId() Failed: %s", e.what());
                 return 0UL;
             }
         }
-        LOGV("getSession() -> 0x%lX", session->id());
+        LOGV("getSessionId() -> 0x%lX", session->id());
         return session->id();
     }
 

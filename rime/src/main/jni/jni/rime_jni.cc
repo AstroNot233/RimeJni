@@ -24,6 +24,9 @@ JRimeCore * getInstance() {
         throw std::runtime_error("RimeApi is not initialized");
     return instance.get();
 }
+void dropInstance() {
+    instance.reset();
+}
 
 // Lifecycle
 static jboolean initialize_RimeApi(JNIEnv* env, jclass /*class*/,
@@ -37,7 +40,8 @@ static jboolean startup_RimeApi_bool(JNIEnv* /*env*/, jclass /*class*/, jboolean
     return getInstance()->startup(fullCheck);
 }
 static void shutdown_RimeApi(JNIEnv* /*env*/, jclass /*class*/) {
-    return getInstance()->shutdown();
+    getInstance()->shutdown();
+    return;
 }
 static jboolean syncUserData_RimeApi(JNIEnv* /*env*/, jclass /*class*/) {
     return getInstance()->syncUserData();
@@ -84,37 +88,39 @@ static jboolean deploySchema_RimeApi(JNIEnv* env, jclass /*class*/, jstring sche
     return getInstance()->deploySchema(sF);
 }
 static jobjectArray getSchemata_RimeApi(JNIEnv* env, jclass /*class*/) {
-    jclass className { env->FindClass("icu/astronot233/rime/RimeSchema") };
-    if (!className)
-        throw std::runtime_error("RimeSchema class not found");
-    jmethodID factoryMethod { env->GetStaticMethodID(
-        className,
+    jclass rimeSchema { env->FindClass("icu/astronot233/rime/RimeSchema") };
+    jmethodID create { env->GetStaticMethodID(
+        rimeSchema,
         "create", 
         "(Ljava/lang/String;Ljava/lang/String;)Licu/astronot233/rime/RimeSchema;"
     ) };
-    if (!factoryMethod)
-        throw std::runtime_error("RimeSchema.create method not found");
     vector<JRimeSchema> sL { getInstance()->getSchemata() };
-    jobjectArray result { env->NewObjectArray( sL.size(), className, nullptr) };
-    if (!result)
-        throw std::runtime_error("Failed to create schema list");
+    jobjectArray result { env->NewObjectArray( sL.size(), rimeSchema, nullptr) };
     for (size_t i { 0 }; i < sL.size(); ++i) {
         jstring sI { stringCxxToJava(env, sL[i].schemaId) };
         jstring sN { stringCxxToJava(env, sL[i].schemaName) };
-        jobject obj { env->CallStaticObjectMethod(className, factoryMethod, sI, sN) };
+        jobject rS { env->CallStaticObjectMethod(rimeSchema, create, sI, sN) };
         env->DeleteLocalRef(sI);
         env->DeleteLocalRef(sN);
-        if (!obj)
-            throw std::runtime_error("Failed to create schema");
-        env->SetObjectArrayElement(result, i, obj);
-        env->DeleteLocalRef(obj);
+        env->SetObjectArrayElement(result, i, rS);
+        env->DeleteLocalRef(rS);
     }
-    env->DeleteLocalRef(className);
+    env->DeleteLocalRef(rimeSchema);
     return result;
 }
-static jstring getCurrentSchemaId_RimeApi(JNIEnv* env, jclass /*class*/) {
-    string sI { getInstance()->getCurrentSchemaId() };
-    return stringCxxToJava(env, sI);
+static jobject getCurrentSchema_RimeApi(JNIEnv* env, jclass /*class*/) {
+    auto const schema { getInstance()->getCurrentSchema() };
+    jclass rimeSchema { env->FindClass("icu/astronot233/rime/RimeSchema") };
+    jmethodID create { env->GetStaticMethodID(
+        rimeSchema,
+        "create",
+        "(Ljava/lang/String;Ljava/lang/String;)Licu/astronot233/rime/RimeSchema;"
+    ) };
+    
+    jstring sI { stringCxxToJava(env, schema.schemaId) };
+    jstring sN { stringCxxToJava(env, schema.schemaName) };
+    
+    return env->NewObject(rimeSchema, create, sI, sN);
 }
 static jboolean selectSchema_RimeApi(JNIEnv* env, jclass /*class*/, jstring schemaId) {
     string sI { stringJavaToCxx(env, schemaId) };
@@ -123,32 +129,24 @@ static jboolean selectSchema_RimeApi(JNIEnv* env, jclass /*class*/, jstring sche
 
 // Candidate and paging
 static jobjectArray getCandidates_RimeApi(JNIEnv* env, jclass /*class*/) {
-    jclass className { env->FindClass("icu/astronot233/rime/RimeCandidate") };
-    if (!className)
-        throw std::runtime_error("RimeCandidate class not found");
-    jmethodID factoryMethod { env->GetStaticMethodID(
-        className,
+    jclass rimeCandidate { env->FindClass("icu/astronot233/rime/RimeCandidate") };
+    jmethodID create { env->GetStaticMethodID(
+        rimeCandidate,
         "create",
         "(Ljava/lang/String;Ljava/lang/String;)Licu/astronot233/rime/RimeCandidate;"
     ) };
-    if (!factoryMethod)
-        throw std::runtime_error("RimeCandidate.create method not found");
     vector<JRimeCandidate> cL { getInstance()->getCandidates() };
-    jobjectArray result { env->NewObjectArray( cL.size(), className, nullptr) };
-    if (!result)
-        throw std::runtime_error("Failed to create candidate list");
+    jobjectArray result { env->NewObjectArray( cL.size(), rimeCandidate, nullptr) };
     for (size_t i { 0 }; i < cL.size(); ++i) {
         jstring cT { stringCxxToJava(env, cL[i].text) };
         jstring cC { stringCxxToJava(env, cL[i].comment) };
-        jobject obj { env->CallStaticObjectMethod(className, factoryMethod, cT, cC) };
+        jobject rC { env->CallStaticObjectMethod(rimeCandidate, create, cT, cC) };
         env->DeleteLocalRef(cT);
         env->DeleteLocalRef(cC);
-        if (!obj)
-            throw std::runtime_error("Failed to create candidate");
-        env->SetObjectArrayElement(result, i, obj);
-        env->DeleteLocalRef(obj);
+        env->SetObjectArrayElement(result, i, rC);
+        env->DeleteLocalRef(rC);
     }
-    env->DeleteLocalRef(className);
+    env->DeleteLocalRef(rimeCandidate);
     return result;
 }
 static jboolean selectCandidate_RimeApi(JNIEnv* /*env*/, jclass /*class*/, jint index) {
@@ -172,6 +170,9 @@ static jboolean deployConfigFile_RimeApi(JNIEnv* env, jclass /*class*/, jstring 
 }
 
 // Query
+static jint getStatus_RimeApi(JNIEnv* env, jclass /*class*/) {
+    return getInstance()->getStatus();
+}
 static jstring getCommit_RimeApi(JNIEnv* env, jclass /*class*/) {
     return stringCxxToJava(env, getInstance()->getCommit() );
 }
@@ -182,35 +183,36 @@ static jstring getPreedit_RimeApi(JNIEnv* env, jclass /*class*/) {
 static JNINativeMethod const methods[] {
     {"initialize", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z", (void*)initialize_RimeApi},
     
-    {"startupImpl", "(Z)Z", (void*)startup_RimeApi_bool},
-    {"shutdown", "()V", (void*)shutdown_RimeApi},
-    {"syncUserData", "()Z", (void*)syncUserData_RimeApi},
+    {"startupImpl",  "(Z)Z", (void*)startup_RimeApi_bool},
+    {"shutdown",     "()V",  (void*)shutdown_RimeApi},
+    {"syncUserData", "()Z",  (void*)syncUserData_RimeApi},
     
-    {"processKeyImpl", "(II)Z", (void*)processKey_RimeApi_int_int},
+    {"processKeyImpl",      "(II)Z",                 (void*)processKey_RimeApi_int_int},
     {"simulateKeySequence", "(Ljava/lang/String;)Z", (void*)simulateKeySequence_RimeApi},
-    {"commitComposition", "()Z", (void*)commitComposition_RimeApi},
-    {"clearComposition", "()V", (void*)clearComposition_RimeApi},
+    {"commitComposition",   "()Z",                   (void*)commitComposition_RimeApi},
+    {"clearComposition",    "()V",                   (void*)clearComposition_RimeApi},
     
-    {"setOption", "(Ljava/lang/String;Z)V", (void*)setOption_RimeApi},
-    {"getOption", "(Ljava/lang/String;)Z", (void*)getOption_RimeApi},
+    {"setOption",   "(Ljava/lang/String;Z)V",                  (void*)setOption_RimeApi},
+    {"getOption",   "(Ljava/lang/String;)Z",                   (void*)getOption_RimeApi},
     {"setProperty", "(Ljava/lang/String;Ljava/lang/String;)V", (void*)setProperty_RimeApi},
-    {"getProperty", "(Ljava/lang/String;)Ljava/lang/String;", (void*)getProperty_RimeApi},
+    {"getProperty", "(Ljava/lang/String;)Ljava/lang/String;",  (void*)getProperty_RimeApi},
     
-    {"deploySchema", "(Ljava/lang/String;)Z", (void*)deploySchema_RimeApi},
-    {"getSchemataImpl", "()[Licu/astronot233/rime/RimeSchema;", (void*)getSchemata_RimeApi},
-    {"getCurrentSchemaId", "()Ljava/lang/String;", (void*)getCurrentSchemaId_RimeApi},
-    {"selectSchema", "(Ljava/lang/String;)Z", (void*)selectSchema_RimeApi},
+    {"deploySchema",       "(Ljava/lang/String;)Z",                (void*)deploySchema_RimeApi},
+    {"getSchemataImpl",    "()[Licu/astronot233/rime/RimeSchema;", (void*)getSchemata_RimeApi},
+    {"getCurrentSchema",   "()Licu/astronot233/rime/RimeSchema;",  (void*)getCurrentSchema_RimeApi},
+    {"selectSchema",       "(Ljava/lang/String;)Z",                (void*)selectSchema_RimeApi},
     
-    {"getCandidatesImpl", "()[Licu/astronot233/rime/RimeCandidate;", (void*)getCandidates_RimeApi},
-    {"selectCandidate", "(I)Z", (void*)selectCandidate_RimeApi},
-    {"deleteCandidate", "(I)Z", (void*)deleteCandidate_RimeApi},
-    {"highlightCandidate", "(I)Z", (void*)highlightCandidate_RimeApi},
-    {"changePage", "(Z)Z", (void*)changePage_RimeApi},
+    {"getCandidatesImpl",  "()[Licu/astronot233/rime/RimeCandidate;", (void*)getCandidates_RimeApi},
+    {"selectCandidate",    "(I)Z",                                    (void*)selectCandidate_RimeApi},
+    {"deleteCandidate",    "(I)Z",                                    (void*)deleteCandidate_RimeApi},
+    {"highlightCandidate", "(I)Z",                                    (void*)highlightCandidate_RimeApi},
+    {"changePage",         "(Z)Z",                                    (void*)changePage_RimeApi},
     
     {"deployConfigFile", "(Ljava/lang/String;Ljava/lang/String;)Z", (void*)deployConfigFile_RimeApi},
     
-    {"getCommit", "()Ljava/lang/String;", (void*)getCommit_RimeApi},
-    {"getPreedit", "()Ljava/lang/String;", (void*)getPreedit_RimeApi}
+    {"getStatusImpl", "()I",                  (void*)getStatus_RimeApi},
+    {"getCommit",     "()Ljava/lang/String;", (void*)getCommit_RimeApi},
+    {"getPreedit",    "()Ljava/lang/String;", (void*)getPreedit_RimeApi}
 };
 
 bool registerNativeMethods(JNIEnv* env) {

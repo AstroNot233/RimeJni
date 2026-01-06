@@ -1,8 +1,11 @@
 package icu.astronot233.rime
 
+import android.util.Log
+
 object RimeApi {
     
     init {
+        Log.d("RimeApi", "Loading native library...")
         System.loadLibrary("rime-jni")
     }
 
@@ -32,7 +35,7 @@ object RimeApi {
     @JvmStatic external fun deploySchema(schemaFile: String): Boolean
     @JvmStatic external fun getSchemataImpl(): Array<RimeSchema>
     @JvmStatic fun getSchemata() = getSchemataImpl().toList()
-    @JvmStatic external fun getCurrentSchemaId(): String
+    @JvmStatic external fun getCurrentSchema(): RimeSchema
     @JvmStatic external fun selectSchema(schemaId: String): Boolean
     // Candidate and page
     @JvmStatic external fun getCandidatesImpl(): Array<RimeCandidate>
@@ -44,6 +47,8 @@ object RimeApi {
     // Config
     @JvmStatic external fun deployConfigFile(fileName: String, versionKey: String): Boolean
     // Query
+    @JvmStatic external fun getStatusImpl(): Int
+    @JvmStatic fun getStatus() = RimeStatus(getStatusImpl())
     @JvmStatic external fun getCommit(): String
     @JvmStatic external fun getPreedit(): String
 
