@@ -120,7 +120,7 @@ static jobject getCurrentSchema_RimeApi(JNIEnv* env, jclass /*class*/) {
     jstring sI { stringCxxToJava(env, schema.schemaId) };
     jstring sN { stringCxxToJava(env, schema.schemaName) };
     
-    return env->NewObject(rimeSchema, create, sI, sN);
+    return env->CallStaticObjectMethod(rimeSchema, create, sI, sN);
 }
 static jboolean selectSchema_RimeApi(JNIEnv* env, jclass /*class*/, jstring schemaId) {
     string sI { stringJavaToCxx(env, schemaId) };
