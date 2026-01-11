@@ -2,6 +2,18 @@ set(LUA_SRC_DIR ${LIBRIME_LUA_SOURCE_DIR}/thirdparty/lua5.4)
 set(PLUGIN_SRC_DIR ${LIBRIME_LUA_SOURCE_DIR}/src)
 
 file(GLOB LUA_SOURCES ${LUA_SRC_DIR}/*.c)
+set_property(SOURCE ${LUA_SOURCES} PROPERTY COMPILE_DEFINITIONS LUA_USE_POSIX;LUA_USE_DLOPEN)
+execute_process(
+  COMMAND ${CMAKE_C_COMPILER} -print-multiarch
+  OUTPUT_VARIABLE multiarch
+  ERROR_QUIET
+)
+if(multiarch)
+  string(REGEX REPLACE "[\r\n]" "" multiarch ${multiarch})
+  add_definitions(-DLUA_MULTIARCH=\"${multiarch}\")
+  message(STATUS "with multiarch: ${multiarch}")
+endif()
+
 file(GLOB PLUGIN_SOURCES
     ${PLUGIN_SRC_DIR}/*.c
     ${PLUGIN_SRC_DIR}/*.cc

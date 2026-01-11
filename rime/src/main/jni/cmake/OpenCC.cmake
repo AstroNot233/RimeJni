@@ -1,5 +1,5 @@
 set(OPENCC_VERSION "1.1.9")
-set(OPENCC_URL "https://github.com/BYVoid/OpenCC/archive/refs/tags/ver.{OPENCC_VERSION}.tar.gz")
+set(OPENCC_URL "https://github.com/BYVoid/OpenCC/archive/refs/tags/ver.${OPENCC_VERSION}.tar.gz")
 
 download_and_extract(
     "OpenCC"

@@ -1,5 +1,5 @@
 set(YAML_CPP_VERSION "0.8.0")
-set(YAML_CPP_URL "https://github.com/jbeder/yaml-cpp/archive/refs/tags/{YAML_CPP_VERSION}.tar.gz")
+set(YAML_CPP_URL "https://github.com/jbeder/yaml-cpp/archive/refs/tags/${YAML_CPP_VERSION}.tar.gz")
 
 download_and_extract(
     "yaml-cpp"

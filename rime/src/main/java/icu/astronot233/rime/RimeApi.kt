@@ -17,7 +17,7 @@ object RimeApi {
 
     // Lifecycle
     @JvmStatic private external fun startupImpl(fullCheck: Boolean): Boolean
-    @JvmStatic fun startup(fullCheck: Boolean = false): Boolean = startupImpl(fullCheck)
+    @JvmStatic fun startup(fullCheck: Boolean = false) = startupImpl(fullCheck)
     @JvmStatic external fun shutdown()
     @JvmStatic external fun syncUserData(): Boolean
     // IO behavior
