@@ -1,4 +1,5 @@
 -keep class icu.astronot233.rime.RimeApi { *; }
 -keep class icu.astronot233.rime.RimeSchema { *; }
 -keep class icu.astronot233.rime.RimeCandidate { *; }
+-keep class icu.astronot233.rime.RimePreedit { *; }
 -keep class icu.astronot233.rime.RimeStatus { *; }

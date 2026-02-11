@@ -68,7 +68,7 @@ namespace rime::jni {
     // Query
         int getStatus();
         std::string getCommit();
-        std::string getPreedit();
+        JRimePreedit getPreedit();
 
     private:
         RimeSessionId getSessionId();

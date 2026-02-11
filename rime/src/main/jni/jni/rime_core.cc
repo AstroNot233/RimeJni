@@ -209,14 +209,33 @@ namespace rime::jni {
         session->ResetCommitText();
         return commit;
     }
-    string JRimeCore::getPreedit() {
+    JRimePreedit JRimeCore::getPreedit() {
         LOGV("getPreedit()");
         RimeSessionId sId { getSessionId() };
         if (!sId)
-            return "";
+            return { "", 0, 0, 0 };
         auto session { Service::instance().GetSession(sId) };
         Context * const context { session->context() };
-        return context->GetPreedit().text;
+        auto const preedit { context->GetPreedit() };
+
+        char const * const bytes { preedit.text.data() };
+        auto const size { preedit.text.size() };
+        unsigned long caretPos { 0 }, selStart { 0 }, selEnd { 0 };
+        for (unsigned long i { 0 }, cnt { 1 }; i < size; ++cnt) {
+            auto const c { static_cast<unsigned char>(bytes[i]) };
+            if (c < 0x80) i += 1;
+            else if ((c & 0xE0) == 0xC0) i += 2;
+            else if ((c & 0xF0) == 0xE0) i += 3;
+            else if ((c & 0xF8) == 0xF0) i += 4;
+            else i += 1;
+            if (i == preedit.caret_pos)
+                caretPos = cnt;
+            if (i == preedit.sel_start)
+                selStart = cnt;
+            if (i == preedit.sel_end)
+                selEnd = cnt;
+        }
+        return { preedit.text, caretPos, selStart, selEnd };
     }
 
     JRimeCore::JRimeCore(

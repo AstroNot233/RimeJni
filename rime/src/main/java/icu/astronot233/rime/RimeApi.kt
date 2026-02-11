@@ -50,6 +50,6 @@ object RimeApi {
     @JvmStatic external fun getStatusImpl(): Int
     @JvmStatic fun getStatus() = RimeStatus(getStatusImpl())
     @JvmStatic external fun getCommit(): String
-    @JvmStatic external fun getPreedit(): String
+    @JvmStatic external fun getPreedit(): RimePreedit
 
 }

@@ -176,8 +176,20 @@ static jint getStatus_RimeApi(JNIEnv* env, jclass /*class*/) {
 static jstring getCommit_RimeApi(JNIEnv* env, jclass /*class*/) {
     return stringCxxToJava(env, getInstance()->getCommit() );
 }
-static jstring getPreedit_RimeApi(JNIEnv* env, jclass /*class*/) {
-    return stringCxxToJava(env, getInstance()->getPreedit() );
+static jobject getPreedit_RimeApi(JNIEnv* env, jclass /*class*/) {
+    auto const preedit { getInstance()->getPreedit() };
+    jclass rimePreedit { env->FindClass("icu/astronot233/rime/RimePreedit") };
+    jmethodID create { env->GetStaticMethodID(
+        rimePreedit,
+        "create",
+        "(Ljava/lang/String;III)Licu/astronot233/rime/RimePreedit;"
+    ) };
+    
+    jstring t { stringCxxToJava(env, preedit.text) };
+    
+    return env->CallStaticObjectMethod(rimePreedit, create,
+        t, static_cast<int>(preedit.caretPos), static_cast<int>(preedit.selStart), static_cast<int>(preedit.selEnd)
+    );
 }
 
 static JNINativeMethod const methods[] {
@@ -210,9 +222,9 @@ static JNINativeMethod const methods[] {
     
     {"deployConfigFile", "(Ljava/lang/String;Ljava/lang/String;)Z", (void*)deployConfigFile_RimeApi},
     
-    {"getStatusImpl", "()I",                  (void*)getStatus_RimeApi},
-    {"getCommit",     "()Ljava/lang/String;", (void*)getCommit_RimeApi},
-    {"getPreedit",    "()Ljava/lang/String;", (void*)getPreedit_RimeApi}
+    {"getStatusImpl", "()I",                                  (void*)getStatus_RimeApi},
+    {"getCommit",     "()Ljava/lang/String;",                 (void*)getCommit_RimeApi},
+    {"getPreedit",    "()Licu/astronot233/rime/RimePreedit;", (void*)getPreedit_RimeApi}
 };
 
 bool registerNativeMethods(JNIEnv* env) {
