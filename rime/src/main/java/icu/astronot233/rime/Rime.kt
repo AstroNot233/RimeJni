@@ -22,7 +22,7 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
         extraBufferCapacity = 16,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
-    private val pedFlow = MutableStateFlow(String())
+    private val pedFlow = MutableStateFlow(RimePreedit(String(), 0, 0, 0))
     private val cddFlow = MutableStateFlow(emptyList<RimeCandidate>())
     private val sttFlow = MutableStateFlow(RimeStatus(0))
     
@@ -64,7 +64,6 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
 
     // IO behavior
     suspend fun processX11Code(x11Code: Int, mask: Int = 0): Boolean = dispatcher.execute {
-        Log.d("Rime", "processX11Code: ($x11Code, $mask)")
         if (RimeApi.processKey(x11Code, mask)) {
             val commit = RimeApi.getCommit()
             val preedit = RimeApi.getPreedit()
@@ -75,7 +74,7 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
             cddFlow.value = candidates
             true
         } else {
-            msgFlow.emit(RimeMessage.Passby(Pair(x11Code, mask)))
+            msgFlow.emit(RimeMessage.Bypass(Pair(x11Code, mask)))
             false
         }
     }
@@ -214,7 +213,7 @@ class Rime(sharedDataDir: String, userDataDir: String, appName: String) {
     suspend fun getCommit(): String = dispatcher.execute {
         RimeApi.getCommit()
     }
-    suspend fun getPreedit(): String = dispatcher.execute {
+    suspend fun getPreedit(): RimePreedit = dispatcher.execute {
         RimeApi.getPreedit()
     }
 

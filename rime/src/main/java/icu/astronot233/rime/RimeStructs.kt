@@ -24,6 +24,20 @@ data class RimeCandidate(
 
 }
 
+data class RimePreedit(
+    val text:     String,
+    val caretPos: Int,
+    val selStart: Int,
+    val selEnd:   Int,
+) {
+
+    companion object {
+        @JvmStatic // Factory method
+        fun create(text: String, caretPos: Int, selStart: Int, selEnd: Int): RimePreedit = RimePreedit(text, caretPos, selStart, selEnd)
+    }
+
+}
+
 data class RimeStatus(
     private val status: Int,
 ) {

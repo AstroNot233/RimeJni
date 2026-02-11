@@ -18,6 +18,13 @@ namespace rime::jni {
         std::string comment;
     };
 
+    struct JRimePreedit {
+        std::string text;
+        unsigned long caretPos;
+        unsigned long selStart;
+        unsigned long selEnd;
+    };
+
 }
 
 #endif // RIME_STRUCTS_HH
