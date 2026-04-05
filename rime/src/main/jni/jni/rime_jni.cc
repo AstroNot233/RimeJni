@@ -168,6 +168,85 @@ static jboolean deployConfigFile_RimeApi(JNIEnv* env, jclass /*class*/, jstring 
     string vK { stringJavaToCxx(env, versionKey) };
     return getInstance()->deployConfigFile(fN, vK);
 }
+static jlong openConfig_RimeConfig(JNIEnv* env, jclass /*class*/, jstring configId) {
+    RimeApi * const api { rime_get_api() };
+    RimeConfig * const cfg { new RimeConfig };
+    string cI { stringJavaToCxx(env, configId) };
+    if (!api->config_open(cI.c_str(), cfg)) {
+        delete cfg;
+        return 0;
+    }
+    return reinterpret_cast<jlong>(cfg);
+}
+static jlong openUserConfig_RimeConfig(JNIEnv* env, jclass /*class*/, jstring configId) {
+    RimeApi * const api { rime_get_api() };
+    RimeConfig * const cfg { new RimeConfig };
+    string cI { stringJavaToCxx(env, configId) };
+    if (!api->user_config_open(cI.c_str(), cfg)) {
+        delete cfg;
+        return 0;
+    }
+    return reinterpret_cast<jlong>(cfg);
+}
+static jlong openSchemaConfig_RimeConfig(JNIEnv* env, jclass /*class*/, jstring schemaId) {
+    RimeApi * const api { rime_get_api() };
+    RimeConfig * const cfg { new RimeConfig };
+    string sI { stringJavaToCxx(env, schemaId) };
+    if (!api->schema_open(sI.c_str(), cfg)) {
+        delete cfg;
+        return 0;
+    }
+    return reinterpret_cast<jlong>(cfg);
+}
+static void closeConfig_RimeConfig(JNIEnv* env, jclass /*class*/, jlong config) {
+    RimeApi * const api { rime_get_api() };
+    RimeConfig * const cfg { reinterpret_cast<RimeConfig*>(config) };
+    api->config_close(cfg);
+    delete cfg;
+}
+static jint getInt_RimeConfig(JNIEnv* env, jclass /*class*/, jlong config, jstring key) {
+    RimeApi * const api { rime_get_api() };
+    string k { stringJavaToCxx(env, key) };
+    int value;
+    if (!api->config_get_int(reinterpret_cast<RimeConfig*>(config), k.c_str(), &value))
+        return 0;
+    return value;
+}
+static jstring getString_RimeConfig(JNIEnv* env, jclass /*class*/, jlong config, jstring key) {
+    RimeApi * const api { rime_get_api() };
+    string k { stringJavaToCxx(env, key) };
+    char const * const value {
+        api->config_get_cstring(reinterpret_cast<RimeConfig*>(config), k.c_str()) 
+    };
+    if (!value)
+        return stringCxxToJava(env, string());
+    return stringCxxToJava(env, string(value));
+}
+static jobjectArray getList_RimeConfig(JNIEnv* env, jclass /*class*/, jlong config, jstring key) {
+    jclass javaString { env->FindClass("java/lang/String") };
+    RimeApi * const api { rime_get_api() };
+    RimeConfig * const cfg { reinterpret_cast<RimeConfig*>(config) };
+    string k { stringJavaToCxx(env, key) };
+    auto const size {static_cast<int>(api->config_list_size(cfg, k.c_str()))};
+    RimeConfigIterator iter;
+    auto array { env->NewObjectArray(size, javaString, nullptr) };
+    if (!api->config_begin_list(&iter, cfg, k.c_str()))
+        return array;
+    for (int i { 0 }; api->config_next(&iter); ++i) {
+        auto elem { stringCxxToJava(env, string(iter.path)) };
+        env->SetObjectArrayElement(array, i, elem);
+        env->DeleteLocalRef(elem);
+    }
+    api->config_end(&iter);
+    env->DeleteLocalRef(javaString);
+    return array;
+}
+static void setBool_RimeConfig(JNIEnv* env, jclass /*class*/, jlong config, jstring key, jboolean value) {
+    RimeApi * const api { rime_get_api() };
+    RimeConfig * const cfg { reinterpret_cast<RimeConfig*>(config) };
+    string k { stringJavaToCxx(env, key) };
+    api->config_set_bool(cfg, k.c_str(), value);
+}
 
 // Query
 static jint getStatus_RimeApi(JNIEnv* env, jclass /*class*/) {
@@ -221,6 +300,14 @@ static JNINativeMethod const methods[] {
     {"changePage",         "(Z)Z",                                    (void*)changePage_RimeApi},
     
     {"deployConfigFile", "(Ljava/lang/String;Ljava/lang/String;)Z", (void*)deployConfigFile_RimeApi},
+    {"openConfigImpl",       "(Ljava/lang/String;)J", (void*)openConfig_RimeConfig},
+    {"openUserConfigImpl",   "(Ljava/lang/String;)J", (void*)openUserConfig_RimeConfig},
+    {"openSchemaConfigImpl", "(Ljava/lang/String;)J", (void*)openSchemaConfig_RimeConfig},
+    {"closeConfig",          "(J)V",                  (void*)closeConfig_RimeConfig},
+    {"getIntImpl",    "(JLjava/lang/String;)I",                   (void*)getInt_RimeConfig},
+    {"getStringImpl", "(JLjava/lang/String;)Ljava/lang/String;",  (void*)getString_RimeConfig},
+    {"getListImpl",   "(JLjava/lang/String;)[Ljava/lang/String;", (void*)getList_RimeConfig},
+    {"setBoolImpl",   "(JLjava/lang/String;Z)V",                  (void*)setBool_RimeConfig},
     
     {"getStatusImpl", "()I",                                  (void*)getStatus_RimeApi},
     {"getCommit",     "()Ljava/lang/String;",                 (void*)getCommit_RimeApi},

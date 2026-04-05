@@ -11,43 +11,43 @@ namespace rime::jni {
     using std::string, std::vector;
 
 // Lifecycle
-    Bool JRimeCore::startup(Bool fullCheck) {
+    Bool JRimeCore::startup(Bool fullCheck) noexcept {
         LOGV("startup(fullCheck = %d)", fullCheck);
         rime->initialize(&traits);
         return rime->start_maintenance(fullCheck);
     }
-    void JRimeCore::shutdown() {
+    void JRimeCore::shutdown() noexcept {
         LOGV("shutdown()");
         return rime->finalize();
     }
-    Bool JRimeCore::syncUserData() {
+    Bool JRimeCore::syncUserData() noexcept {
         LOGV("syncUserData()");
         return rime->sync_user_data();
     }
 
 // IO behavior
-    Bool JRimeCore::processKey(int keyCode, int mask) {
+    Bool JRimeCore::processKey(int keyCode, int mask) noexcept {
         LOGV("processKey(keyCode = %d, mask = %d)", keyCode, mask);
         RimeSessionId sId { getSessionId() };
         if (!sId)
             return False;
         return rime->process_key(sId, keyCode, mask);
     }
-    Bool JRimeCore::simulateKeySequence(string const & sequence) {
+    Bool JRimeCore::simulateKeySequence(string const & sequence) noexcept {
         LOGV("simulateKeySequence(sequence = %s)", sequence.c_str());
         RimeSessionId sId { getSessionId() };
         if (!sId)
             return False;
         return rime->simulate_key_sequence(sId, sequence.c_str());
     }
-    Bool JRimeCore::commitComposition() {
+    Bool JRimeCore::commitComposition() noexcept {
         LOGV("commitComposition()");
         RimeSessionId sId { getSessionId() };
         if (!sId)
             return False;
         return rime->commit_composition(sId);
     }
-    void JRimeCore::clearComposition() {
+    void JRimeCore::clearComposition() noexcept {
         LOGV("clearComposition()");
         RimeSessionId sId { getSessionId() };
         if (!sId)
@@ -56,28 +56,28 @@ namespace rime::jni {
     }
 
 // Option
-    void JRimeCore::setOption(string const & option, Bool value) {
+    void JRimeCore::setOption(string const & option, Bool value) noexcept {
         LOGV("setOption(option = %s, value = %d)", option.c_str(), value);
         RimeSessionId sId { getSessionId() };
         if (!sId)
             return;
         return rime->set_option(sId, option.c_str(), value);
     }
-    Bool JRimeCore::getOption(string const & option) {
+    Bool JRimeCore::getOption(string const & option) noexcept {
         LOGV("getOption(option = %s)", option.c_str());
         RimeSessionId sId { getSessionId() };
         if (!sId)
             return False;
         return rime->get_option(sId, option.c_str());
     }
-    void JRimeCore::setProperty(string const & property, string const & value) {
+    void JRimeCore::setProperty(string const & property, string const & value) noexcept {
         LOGV("setProperty(property = %s, value = %s)", property.c_str(), value.c_str());
         RimeSessionId sId { getSessionId() };
         if (!sId)
             return;
         return rime->set_property(sId, property.c_str(), value.c_str());
     }
-    string JRimeCore::getProperty(string const & property) {
+    string JRimeCore::getProperty(string const & property) noexcept {
         LOGV("getProperty(property = %s)", property.c_str());
         RimeSessionId sId { getSessionId() };
         if (!sId)
@@ -91,11 +91,11 @@ namespace rime::jni {
     }
 
 // Schema
-    Bool JRimeCore::deploySchema(string const & schemaFile) {
+    Bool JRimeCore::deploySchema(string const & schemaFile) noexcept {
         LOGV("deploySchema(schemaFile = %s)", schemaFile.c_str());
         return rime->deploy_schema(schemaFile.c_str());
     }
-    vector<JRimeSchema> JRimeCore::getSchemata() {
+    vector<JRimeSchema> JRimeCore::getSchemata() noexcept {
         LOGV("getSchemata()");
         RimeSchemaList list {};
         if (!rime->get_schema_list(&list))
@@ -111,7 +111,7 @@ namespace rime::jni {
         rime->free_schema_list(&list);
         return rimeSchemaList;
     }
-    JRimeSchema JRimeCore::getCurrentSchema() {
+    JRimeSchema JRimeCore::getCurrentSchema() noexcept {
         LOGV("getCurrentSchema()");
         RimeSessionId sId { getSessionId() };
         if (!sId)
@@ -120,7 +120,7 @@ namespace rime::jni {
         Schema * const schema { session->schema() };
         return { schema->schema_id(), schema->schema_name() };
     }
-    Bool JRimeCore::selectSchema(string const & schemaId) {
+    Bool JRimeCore::selectSchema(string const & schemaId) noexcept {
         LOGV("selectSchema(schemaId = %s)", schemaId.c_str());
         RimeSessionId sId { getSessionId() };
         if (!sId)
@@ -129,7 +129,7 @@ namespace rime::jni {
     }
 
 // Candidate and page
-    vector<JRimeCandidate> JRimeCore::getCandidates() {
+    vector<JRimeCandidate> JRimeCore::getCandidates() noexcept {
         LOGV("getCandidates()");
         RimeSessionId sId { getSessionId() };
         if (!sId)
@@ -147,28 +147,28 @@ namespace rime::jni {
         rime->candidate_list_end(&iter);
         return rimeCandidateList;
     }
-    Bool JRimeCore::selectCandidate(int index) {
+    Bool JRimeCore::selectCandidate(int index) noexcept {
         LOGV("selectCandidate(index = %d)", index);
         RimeSessionId sId { getSessionId() };
         if (!sId)
             return False;
         return rime->select_candidate(sId, index);
     }
-    Bool JRimeCore::deleteCandidate(int index) {
+    Bool JRimeCore::deleteCandidate(int index) noexcept {
         LOGV("deleteCandidate(index = %d)", index);
         RimeSessionId sId { getSessionId() };
         if (!sId)
             return False;
         return rime->delete_candidate(sId, index);
     }
-    Bool JRimeCore::highlightCandidate(int index) {
+    Bool JRimeCore::highlightCandidate(int index) noexcept {
         LOGV("highlightCandidate(index = %d)", index);
         RimeSessionId sId { getSessionId() };
         if (!sId)
             return False;
         return rime->highlight_candidate(sId, index);
     }
-    Bool JRimeCore::changePage(Bool backward) {
+    Bool JRimeCore::changePage(Bool backward) noexcept {
         LOGV("changePage(backward = %d)", backward);
         RimeSessionId sId { getSessionId() };
         if (!sId)
@@ -177,13 +177,13 @@ namespace rime::jni {
     }
 
 // Config
-    Bool JRimeCore::deployConfigFile(string const & fileName, string const & versionKey) {
+    Bool JRimeCore::deployConfigFile(string const & fileName, string const & versionKey) noexcept {
         LOGV("deployConfigFile(fileName = %s, versionKey = %s)", fileName.c_str(), versionKey.c_str());
         return rime->deploy_config_file(fileName.c_str(), versionKey.c_str());
     }
 
 // Query
-    int JRimeCore::getStatus() {
+    int JRimeCore::getStatus() noexcept {
         LOGV("getStatus()");
         RimeSessionId sId { getSessionId() };
         if (!sId)
@@ -199,7 +199,7 @@ namespace rime::jni {
             ((context->get_option("traditional"))    << 5) |
             ((context->get_option("ascii_punct"))    << 6) ;
     }
-    string JRimeCore::getCommit() {
+    string JRimeCore::getCommit() noexcept {
         LOGV("getCommit()");
         RimeSessionId sId { getSessionId() };
         if (!sId)
@@ -209,7 +209,7 @@ namespace rime::jni {
         session->ResetCommitText();
         return commit;
     }
-    JRimePreedit JRimeCore::getPreedit() {
+    JRimePreedit JRimeCore::getPreedit() noexcept {
         LOGV("getPreedit()");
         RimeSessionId sId { getSessionId() };
         if (!sId)
@@ -242,7 +242,7 @@ namespace rime::jni {
         string const & sharedDataDir,
         string const & userDataDir,
         string const & appName
-    ) : sharedDataDir { sharedDataDir }, userDataDir { userDataDir }, appName { appName },
+    ) noexcept : sharedDataDir { sharedDataDir }, userDataDir { userDataDir }, appName { appName },
         traits { 
             sizeof(rime_traits_t) - sizeof(rime_traits_t::data_size),
             this->sharedDataDir.c_str(), this->userDataDir.c_str(),
@@ -261,15 +261,15 @@ namespace rime::jni {
         );
         rime->setup(&traits);
         rime->set_notification_handler(nullptr, nullptr);
-        LOGV("Ctor done");
+        LOGI("Ctor done");
     }
-    JRimeCore::~JRimeCore() {
+    JRimeCore::~JRimeCore() noexcept {
         LOGI("Dtor()");
         LOGI("Dtor done");
     }
 
 // Private:
-    RimeSessionId JRimeCore::getSessionId() {
+    RimeSessionId JRimeCore::getSessionId() noexcept {
         static std::shared_ptr<SessionTracker> session { nullptr };
         if (session && !session->operator bool())
             session = nullptr;

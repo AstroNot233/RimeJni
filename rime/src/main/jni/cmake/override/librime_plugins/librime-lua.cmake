@@ -35,7 +35,7 @@ target_include_directories(rime-lua-objs PRIVATE
 )
 
 target_compile_definitions(rime-lua-objs PRIVATE
-    LUA_COMPAT_5_4
+    LUA_COMPAT_5_3
 )
 
 target_link_libraries(rime-lua-objs PRIVATE ${BOOST_DEPS} libopencc)

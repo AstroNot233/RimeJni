@@ -29,49 +29,49 @@ namespace rime::jni {
             std::string const & sharedDataDir,
             std::string const & userDataDir,
             std::string const & appName
-        );
-        ~JRimeCore();
+        ) noexcept;
+        ~JRimeCore() noexcept;
 
     // Lifecycle
-        Bool startup(Bool fullCheck);
-        void shutdown();
-        Bool syncUserData();
+        Bool startup(Bool fullCheck) noexcept;
+        void shutdown() noexcept;
+        Bool syncUserData() noexcept;
 
     // IO behavior
-        Bool processKey(int keyCode, int mask);
-        Bool simulateKeySequence(std::string const & sequence);
-        Bool commitComposition();
-        void clearComposition();
+        Bool processKey(int keyCode, int mask) noexcept;
+        Bool simulateKeySequence(std::string const & sequence) noexcept;
+        Bool commitComposition() noexcept;
+        void clearComposition() noexcept;
 
     // Option
-        void setOption(std::string const & option, Bool value);
-        Bool getOption(std::string const & option);
-        void setProperty(std::string const & property, std::string const & value);
-        std::string getProperty(std::string const & property);
+        void setOption(std::string const & option, Bool value) noexcept;
+        Bool getOption(std::string const & option) noexcept;
+        void setProperty(std::string const & property, std::string const & value) noexcept;
+        std::string getProperty(std::string const & property) noexcept;
 
     // Schema
-        Bool deploySchema(std::string const & schemaFile);
-        std::vector<JRimeSchema> getSchemata();
-        JRimeSchema getCurrentSchema();
-        Bool selectSchema(std::string const & schemaId);
+        Bool deploySchema(std::string const & schemaFile) noexcept;
+        std::vector<JRimeSchema> getSchemata() noexcept;
+        JRimeSchema getCurrentSchema() noexcept;
+        Bool selectSchema(std::string const & schemaId) noexcept;
 
     // Candidate and page
-        std::vector<JRimeCandidate> getCandidates();
-        Bool selectCandidate(int index);
-        Bool deleteCandidate(int index);
-        Bool highlightCandidate(int index);
-        Bool changePage(Bool backward);
+        std::vector<JRimeCandidate> getCandidates() noexcept;
+        Bool selectCandidate(int index) noexcept;
+        Bool deleteCandidate(int index) noexcept;
+        Bool highlightCandidate(int index) noexcept;
+        Bool changePage(Bool backward) noexcept;
 
     // Config
-        Bool deployConfigFile(std::string const & fileName, std::string const & versionKey);
+        Bool deployConfigFile(std::string const & fileName, std::string const & versionKey) noexcept;
 
     // Query
-        int getStatus();
-        std::string getCommit();
-        JRimePreedit getPreedit();
+        int getStatus() noexcept;
+        std::string getCommit() noexcept;
+        JRimePreedit getPreedit() noexcept;
 
     private:
-        RimeSessionId getSessionId();
+        RimeSessionId getSessionId() noexcept;
 
     };
 
