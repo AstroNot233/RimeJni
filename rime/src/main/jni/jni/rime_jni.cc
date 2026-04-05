@@ -271,7 +271,7 @@ static jobject getPreedit_RimeApi(JNIEnv* env, jclass /*class*/) {
     );
 }
 
-static JNINativeMethod const methods[] {
+static JNINativeMethod const methods_RimeApi[] {
     {"initialize", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z", (void*)initialize_RimeApi},
     
     {"startupImpl",  "(Z)Z", (void*)startup_RimeApi_bool},
@@ -300,6 +300,13 @@ static JNINativeMethod const methods[] {
     {"changePage",         "(Z)Z",                                    (void*)changePage_RimeApi},
     
     {"deployConfigFile", "(Ljava/lang/String;Ljava/lang/String;)Z", (void*)deployConfigFile_RimeApi},
+    
+    {"getStatusImpl", "()I",                                  (void*)getStatus_RimeApi},
+    {"getCommit",     "()Ljava/lang/String;",                 (void*)getCommit_RimeApi},
+    {"getPreedit",    "()Licu/astronot233/rime/RimePreedit;", (void*)getPreedit_RimeApi}
+};
+
+static JNINativeMethod const methods_RimeConfig[] {
     {"openConfigImpl",       "(Ljava/lang/String;)J", (void*)openConfig_RimeConfig},
     {"openUserConfigImpl",   "(Ljava/lang/String;)J", (void*)openUserConfig_RimeConfig},
     {"openSchemaConfigImpl", "(Ljava/lang/String;)J", (void*)openSchemaConfig_RimeConfig},
@@ -308,19 +315,19 @@ static JNINativeMethod const methods[] {
     {"getStringImpl", "(JLjava/lang/String;)Ljava/lang/String;",  (void*)getString_RimeConfig},
     {"getListImpl",   "(JLjava/lang/String;)[Ljava/lang/String;", (void*)getList_RimeConfig},
     {"setBoolImpl",   "(JLjava/lang/String;Z)V",                  (void*)setBool_RimeConfig},
-    
-    {"getStatusImpl", "()I",                                  (void*)getStatus_RimeApi},
-    {"getCommit",     "()Ljava/lang/String;",                 (void*)getCommit_RimeApi},
-    {"getPreedit",    "()Licu/astronot233/rime/RimePreedit;", (void*)getPreedit_RimeApi}
 };
 
 bool registerNativeMethods(JNIEnv* env) {
-    jclass className { env->FindClass("icu/astronot233/rime/RimeApi") };
-    if (!className)
+    jclass rA { env->FindClass("icu/astronot233/rime/RimeApi") };
+    jclass rC { env->FindClass("icu/astronot233/rime/RimeConfig") };
+    if (!rA || !rC)
         return false;
-    if (env->RegisterNatives(className, methods, sizeof(methods) / sizeof(methods[0])) < 0)
+    if (env->RegisterNatives(rA, methods_RimeApi, sizeof(methods_RimeApi) / sizeof(JNINativeMethod)) < 0)
         return false;
-    env->DeleteLocalRef(className);
+    if (env->RegisterNatives(rC, methods_RimeConfig, sizeof(methods_RimeConfig) / sizeof(JNINativeMethod)) < 0)
+        return false;
+    env->DeleteLocalRef(rA);
+    env->DeleteLocalRef(rC);
     return true;
 }
 

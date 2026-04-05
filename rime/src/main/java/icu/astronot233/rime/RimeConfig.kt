@@ -32,7 +32,7 @@ class RimeConfig private constructor(
 
         fun openUserConfig(configId: String): RimeConfig = RimeConfig(openUserConfigImpl(configId))
 
-        fun openSchema(schemaId: String): RimeConfig = RimeConfig(openSchemaImpl(schemaId))
+        fun openSchema(schemaId: String): RimeConfig = RimeConfig(openSchemaConfigImpl(schemaId))
 
         @JvmStatic
         private external fun openConfigImpl(configId: String): Long
@@ -41,7 +41,7 @@ class RimeConfig private constructor(
         private external fun openUserConfigImpl(configId: String): Long
 
         @JvmStatic
-        private external fun openSchemaImpl(schemaId: String): Long
+        private external fun openSchemaConfigImpl(schemaId: String): Long
 
         @JvmStatic
         private external fun getIntImpl(peer: Long, key: String): Int
